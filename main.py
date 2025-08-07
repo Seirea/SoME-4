@@ -1,3 +1,9 @@
+from manim.utils.color.manim_colors import YELLOW
+from manim.mobject.geometry.arc import Dot
+from manim.mobject.graphing.coordinate_systems import ComplexPlane
+from manim.constants import PI
+from manim.mobject.geometry.tips import StealthTip
+from manim.mobject.graphing.coordinate_systems import Axes
 from manim.mobject.types.vectorized_mobject import VGroup
 from cloup.formatting._formatter import Definition
 from manim.animation.indication import Blink
@@ -39,7 +45,7 @@ class Cyclo(Scene):
 
     def section(self):
         self.level[0] += 1
-        self.level[1] = 0
+        self.level[1] = 1
         self.next_section(f"{self.level[0]}.{self.level[1]}")
 
     def subsection(self):
@@ -60,7 +66,6 @@ class Cyclo(Scene):
     def intro(self):
 
         self.section()
-        self.subsection()
         self.titlecard("Something Familiar", MathTex(r"2^{2^\alpha} + 1"))
         # text = Text("Let's start with something familiar")
         # self.play(Write(text))
@@ -167,7 +172,6 @@ class Cyclo(Scene):
 
     def definition(self):
         self.section()
-        self.subsection()
 
         defi_str = r"\Phi_n(x) = \prod_{\substack{1 \le k \le n\\gcd(k,n) = 1}} \left(x - e^{2\pi i \frac{k}{n}} \right)"
 
@@ -203,8 +207,24 @@ class Cyclo(Scene):
         self.play(FadeIn(weird_highlight))
         self.play(weird_highlight.animate.move_to(weirds[1]))
         self.play(weird_highlight.animate.move_to(weirds[2]))
+
+    def roots_unity(self):
+        self.section()
         
-    
+
+        grph = VGroup()
+        plane = ComplexPlane().add_coordinates()        
+        grph.add(plane)
+
+        plot = plane.plot_parametric_curve(lambda t: np.array([np.cos(t), np.sin(t)]), t_range = [0, 2*PI])
+        grph.add(plot)
+        N = 6
+        points = VGroup(*[Dot(plane.n2p(np.exp(2*PI*(0+1j)*(L / N))), color=YELLOW) for L in range(N)])
+        
+        grph.add(points)
+        
+        self.titlecard("Roots of Unity", grph)
+            
     def construct(self):
         self.intro()
         
@@ -213,5 +233,7 @@ class Cyclo(Scene):
         self.wait(3)
         self.remove(intro_anim)
 
-        self.definition()
         # PLAY INTRO ANIMATION
+        self.definition()
+
+        self.roots_unity()
