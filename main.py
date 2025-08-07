@@ -1,3 +1,9 @@
+from manim.mobject.types.vectorized_mobject import VGroup
+from cloup.formatting._formatter import Definition
+from manim.animation.indication import Blink
+from manim.mobject.geometry.polygram import Rectangle
+from manim.utils.color.manim_colors import GREY_A
+from manim.animation.creation import TypeWithCursor
 from manim.mobject.svg.brace import BraceLabel
 from typing import Callable
 from manim.animation.animation import Animation
@@ -11,10 +17,14 @@ from manim.mobject.text.tex_mobject import MathTex
 from manim.animation.transform import Restore
 import manim
 from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, Transform, FadeIn
-from rich.console import detect_legacy_windows
-
+import numpy as np
 
 # class SectionDisplay(Tex):
+
+
+# Aliases
+mt = MathTex
+tx = Tex
 
 
 class Cyclo(Scene):
@@ -30,6 +40,7 @@ class Cyclo(Scene):
     def section(self):
         self.level[0] += 1
         self.level[1] = 0
+        self.next_section(f"{self.level[0]}.{self.level[1]}")
 
     def subsection(self):
         self.hide_all()
@@ -90,8 +101,8 @@ class Cyclo(Scene):
 
         self.play(proof_req.animate.shift(3*UP), proof_line_1.animate.shift(2*UP))
 
-        downarrow.move_to([0,0.5,0])
-        proof_line_2.move_to([0,-0.8,0])
+        downarrow.move_to(np.array([0,0.5,0]))
+        proof_line_2.move_to(np.array([0,-0.8,0]))
         self.play(Write(downarrow), Write(proof_line_2))
 
         proof_line_3 = MathTex(r"2^{2^{\alpha}}+1 \mid 2^{2^{\alpha}w} + 1")
@@ -149,9 +160,58 @@ class Cyclo(Scene):
         # not sure about this one
 
         self.hide_all()
-        stick_figure = Tex("STICK FIGURE")  # i can make one for us :)
-        self.play(Create(stick_figure))
+        stick_figure = Tex("STICK FIGURE HERE")
+        self.play(FadeIn(stick_figure))
+        self.wait(3.5)
+        self.remove(stick_figure)
 
+    def definition(self):
+        self.section()
+        self.subsection()
+
+        defi_str = r"\Phi_n(x) = \prod_{\substack{1 \le k \le n\\gcd(k,n) = 1}} \left(x - e^{2\pi i \frac{k}{n}} \right)"
+
+        title_defi = mt(defi_str)
+                
+        self.titlecard("A Definition", title_defi)
+
+        defi = mt(defi_str)
+        defi_eng = Text(
+                "= the lowest degree monic polynomial whose roots are the nth primitive roots of unity",
+                font_size = 20
+        ).next_to(defi, DOWN)
+        self.play(Write(defi))
+        cursor_1 = Rectangle(
+            color = GREY_A,
+            fill_color = GREY_A,
+            fill_opacity = 1.0,
+            height = 0.5,
+            width = 0.25,
+        ).move_to(defi_eng[0]) # Position the cursor
+        self.play(TypeWithCursor(defi_eng, cursor_1))
+        self.play(Blink(cursor_1, blinks=2))
+        self.hide_all()
+
+        weirds = VGroup(
+                tx(r"1. Primitive Roots ???"),
+                tx(r"2. $\Phi$ ???"),
+                tx(r"3. Integer polynomials ???"),
+        ).arrange(DOWN)
+        weird_highlight = SurroundingRectangle(weirds[0], buff=.1)
+        weird_highlight.scale_to_fit_width(max([x.width for x in weirds]) + .2)
+        self.play(FadeIn(weirds))
+        self.play(FadeIn(weird_highlight))
+        self.play(weird_highlight.animate.move_to(weirds[1]))
+        self.play(weird_highlight.animate.move_to(weirds[2]))
+        
+    
     def construct(self):
         self.intro()
+        
+        intro_anim = Tex("INTRO ANIM")
+        self.add(intro_anim)
+        self.wait(3)
+        self.remove(intro_anim)
+
+        self.definition()
         # PLAY INTRO ANIMATION
