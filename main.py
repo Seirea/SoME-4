@@ -1,11 +1,13 @@
+from manim.animation.speedmodifier import ChangeSpeed
+from manim.utils.color.manim_colors import ORANGE
+from manim.mobject.value_tracker import ValueTracker
+from manim.constants import RIGHT
+from video import Cyclotomics
 from manim.utils.color.manim_colors import YELLOW
 from manim.mobject.geometry.arc import Dot
 from manim.mobject.graphing.coordinate_systems import ComplexPlane
 from manim.constants import PI
-from manim.mobject.geometry.tips import StealthTip
-from manim.mobject.graphing.coordinate_systems import Axes
 from manim.mobject.types.vectorized_mobject import VGroup
-from cloup.formatting._formatter import Definition
 from manim.animation.indication import Blink
 from manim.mobject.geometry.polygram import Rectangle
 from manim.utils.color.manim_colors import GREY_A
@@ -22,7 +24,7 @@ from manim.animation.transform import ReplacementTransform
 from manim.mobject.text.tex_mobject import MathTex
 from manim.animation.transform import Restore
 import manim
-from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, Transform, FadeIn
+from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, Transform, FadeIn, ReplacementTransform
 import numpy as np
 
 # class SectionDisplay(Tex):
@@ -208,22 +210,134 @@ class Cyclo(Scene):
         self.play(weird_highlight.animate.move_to(weirds[1]))
         self.play(weird_highlight.animate.move_to(weirds[2]))
 
-    def roots_unity(self):
-        self.section()
-        
-
+    @staticmethod
+    def unity(N):
         grph = VGroup()
         plane = ComplexPlane().add_coordinates()        
         grph.add(plane)
 
         plot = plane.plot_parametric_curve(lambda t: np.array([np.cos(t), np.sin(t)]), t_range = [0, 2*PI])
         grph.add(plot)
-        N = 6
-        points = VGroup(*[Dot(plane.n2p(np.exp(2*PI*(0+1j)*(L / N))), color=YELLOW) for L in range(N)])
+        points = VGroup(*[Dot(plane.n2p(np.exp(2*PI*1.j*(L / N))), color=YELLOW) for L in range(int(np.floor(N)))])
         
         grph.add(points)
+
+        grph.add(Text(f"N = {np.around(N, 3)}", font_size=24).to_edge(UP + RIGHT)) # pyrefly: ignore
         
-        self.titlecard("Roots of Unity", grph)
+        return grph
+
+
+
+    def roots_unity_sect(self):
+        self.section()
+
+        unity_6 = self.unity(6)
+        
+        self.titlecard("Regular Roots of Unity", unity_6)
+
+        self.hide_all()
+        stick_figure = Tex("STICK FIGURE HERE")
+        self.play(FadeIn(stick_figure))
+        self.wait(3.5)
+        self.remove(stick_figure)
+
+        self.hide_all()
+
+        plane = ComplexPlane().add_coordinates()
+
+
+        main_point = Dot(plane.n2p(1+0j), color=YELLOW)
+        main_label = mt(r"1+0i").next_to(main_point, RIGHT)
+        moving_point = Dot(plane.n2p(1+0j), color=ORANGE)
+
+        k = ValueTracker(0)
+
+        maths_label = mt(r"e^{2 \pi i k}", color=ORANGE).to_edge(UP + RIGHT) # pyrefly: ignore
+
+        k_label = Text("k = 0", font_size=24)\
+                .next_to(maths_label, DOWN)\
+                .add_updater(
+                        lambda m: m.become(Text(f"k = {np.around(k.get_value(), 3)}", font_size=24)
+                                .next_to(maths_label, DOWN))
+                )
+        def eval_p(x) -> complex:
+            return np.exp(1.j*2*PI*x)
+        def cpx_str(z: complex) -> str:
+            return str(np.around(z, 3)).replace("j", "i").replace(")", "").replace("(", "").replace("+", " + ").replace("-", " - ")
+        
+        point_label = Text("1+0i", font_size=20).add_updater(lambda m: m.become(Text(cpx_str(eval_p(k.get_value())), font_size=20)).next_to(moving_point, UP))        
+
+        moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
+        moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
+
+        self.add(plane, main_point, moving_point, main_label, point_label, maths_label, k_label)
+
+
+        self.play(ChangeSpeed(k.animate.set_value(1), speedinfo={0: 0.25}))
+
+        self.wait()
+        
+        self.play(ChangeSpeed(k.animate.set_value(2), speedinfo={0: 0.25}))
+
+        self.wait()
+        
+        self.play(ChangeSpeed(k.animate.set_value(3), speedinfo={0: 0.25}))
+
+
+        self.hide_all()
+
+        proof_1 = mt(r"x^n - 1 = 0")
+        proof_2 = mt(r"x^n = 1")
+        proof_3 = mt(r"x^n = e^{e\pi i k}")
+        proof_4 = mt(r"x = e^{e\pi i \frac{k}{n}}")
+
+        self.play(Write(proof_1))         
+        self.play(ReplacementTransform(proof_1, proof_2))
+        self.play(ReplacementTransform(proof_2, proof_3))
+        self.play(ReplacementTransform(proof_3, proof_4))
+
+        proof_box = SurroundingRectangle(proof_4, buff = 0.1)
+        self.play(Create(proof_box))
+
+        self.hide_all()
+
+        N = ValueTracker(2)
+
+        meow = self.unity(2)
+        meow.add_updater(lambda m: m.become(self.unity(N.get_value())))
+
+        self.play(FadeIn(meow))
+
+        speed = 0.25
+        self.play(ChangeSpeed(N.animate.set_value(2), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(3), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(4), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(5), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(6), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(7), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(8), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(9), speedinfo={0: speed}))
+        self.play(ChangeSpeed(N.animate.set_value(10), speedinfo={0: speed}))
+
+        self.wait()
+
+        self.subsection()
+        self.titlecard("Primitive Roots of Unity", unity_6)
+
+        subset = tx(r"primitve roots $\subseteq$ regular roots")
+        self.play(Write(subset))
+
+        
+        
+        
+
+    def phi(n: int):
+        return len([k for k in range(1, n+1) if np.gcd(n, k) == 1])
+
+    def totients(self):
+        self.section()
+        self.titlecard("Connections to Euler's Totient Function")
+        
             
     def construct(self):
         self.intro()
@@ -236,4 +350,9 @@ class Cyclo(Scene):
         # PLAY INTRO ANIMATION
         self.definition()
 
-        self.roots_unity()
+        self.roots_unity_sect()
+
+        self.totients()
+
+        Cyclotomics.setup(self)
+       
