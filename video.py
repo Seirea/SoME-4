@@ -1,22 +1,26 @@
-from manim.mobject.svg.brace import BraceLabel
-from manim import VGroup
+# from manim.mobject.svg.brace import BraceLabel
+# from manim import VGroup
 from typing import Callable
-from manim.animation.animation import Animation
-from manim.animation.creation import Create
-from manim.mobject.geometry.shape_matchers import SurroundingRectangle
-from manim.animation.growing import GrowArrow
-from manim.mobject.geometry.line import Arrow
-from manim.mobject.mobject import Mobject
-from manim.animation.transform import ReplacementTransform
-from manim.mobject.text.tex_mobject import MathTex
-from manim.animation.transform import Restore
-import manim
-from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, Transform, FadeIn
+# from manim.animation.animation import Animation
+# from manim.animation.creation import Create
+# from manim.mobject.geometry.shape_matchers import SurroundingRectangle
+# from manim.animation.growing import GrowArrow
+# from manim.mobject.geometry.line import Arrow
+# from manim.mobject.mobject import Mobject
+# from manim.animation.transform import ReplacementTransform
+# from manim.mobject.text.tex_mobject import MathTex
+# from manim.animation.transform import Restore
+# import manim
+# from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, Transform, FadeIn
+from manim import *
 from rich.console import detect_legacy_windows
 
-
-# class SectionDisplay(Tex):
-
+# print(MathTex(r"e^{2\pi i \frac{1}{6}}", r"1")[0][-1])
+#
+# if MathTex(r"e^{2\pi i \frac{1}{6}}", r"1")[0][7].tex_strings[0] == "6":
+#     print("haha")
+# else:
+#     print("buh")
 
 class Cyclo(Scene):
     level = [0, 0]
@@ -47,6 +51,15 @@ class Cyclo(Scene):
             self.play(FadeOut(text))
         return text
 
+    def divisors(self, n):
+        divs = []
+
+        for i in range(1,n+1):
+            if n%i == 0:
+                divs.append(i)
+
+        return divs
+
     def intro(self):
 
         self.section()
@@ -55,14 +68,14 @@ class Cyclo(Scene):
         # text = Text("Let's start with something familiar")
         # self.play(Write(text))
 
-        fermat_full = manim.MathTex(r"p = 2^{2^\alpha} + 1")
+        fermat_full = MathTex(r"p = 2^{2^\alpha} + 1")
         fermat_full.save_state()
         self.play(Write(fermat_full))
 
-        fermat = manim.MathTex(r"p = 2^h + 1")
+        fermat = MathTex(r"p = 2^h + 1")
         self.play(Transform(fermat_full, fermat))
 
-        down_arr = manim.MathTex(r"\Downarrow")
+        down_arr = MathTex(r"\Downarrow")
         down_arr.next_to(fermat, DOWN)
 
         fermat_examples = Text("e.g. 3, 5, 17", font_size=15)
@@ -169,38 +182,184 @@ class Cyclo(Scene):
                                       r"\Phi_9(x) &= x^6 + x^3 + 1 \\ \Phi_{10}(x) &= x^4 - x^3 + x^2 - x + 1")
         self.play(Write(cyclotomic_examples))
 
-    def divisors(self, n):
-        divs = []
-
-        for i in range(1,n+1):
-            if n%i == 0:
-                divs.append(i)
-
-        return divs
-
     def definitions(self):
         self.section()
         self.subsection()
         self.titlecard("Cyclotomic Polynomials", MathTex(r"\Phi_n(x)"))
 
-        cyclo_examples = MathTex(r"{{x-1&=}} {{(x-1)}} \\", r"{{x^2-1&=}} {{(x-1)}} {{(x+1)}} \\", r"{{x^3-1&=}} {{(x-1)}} {{(x^2+x+1)}} \\", r"{{x^4-1&=}} {{(x-1)}} {{(x+1)}} {{(x^2+1)}} \\", r"{{x^5-1&=}} {{(x-1)}} {{(x^4+x^3+x^2+x+1)}} \\", r"{{x^6-1&=}} {{(x-1)}} {{(x+1)}} {{(x^2+x+1)}} {{(x^2-x+1)}} \\", r"{{x^7-1&=}} {{(x-1)}} {{(x^6+x^5+x^4+x^3+x^2+x+1)}}")
-        cyclo_examples.move_to([0,0,0])
-        self.play(Write(cyclo_examples))
 
-        colors = [manim.RED, manim.ORANGE, manim.YELLOW, manim.GREEN, manim.BLUE, manim.PURPLE, manim.PINK]
+        cyclo_examples = [MathTex(r"x-1", r"=", r"(x-1)"), MathTex(r"x^2-1", r"=", r"(x-1)", r"(x+1)"), MathTex(r"x^3-1", r"=", r"(x-1)", r"(x^2+x+1)"), MathTex(r"x^4-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+1)"), MathTex(r"x^5-1", r"=", r"(x-1)", r"(x^4+x^3+x^2+x+1)"), MathTex(r"x^6-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+x+1)", r"(x^2-x+1)"), MathTex(r"x^7-1", r"=", r"(x-1)", r"(x^6+x^5+x^4+x^3+x^2+x+1)")]
+
+        lhs = VGroup(cyclo_examples[i][0] for i in range(7))
+        equals_signs = VGroup(cyclo_examples[i][1] for i in range(7))
+        rhs = VGroup(cyclo_examples[i][2:] for i in range(7))
+
+        lhs.arrange(DOWN, aligned_edge=RIGHT, buff=0.5)
+
+        for l, eq, r in zip(lhs, equals_signs, rhs):
+            eq.next_to(l, RIGHT, buff=0.1)
+            r.next_to(eq, RIGHT, buff=0.1)
+
+        equations = VGroup(VGroup(l, eq, r) for l, eq, r in zip(lhs, equals_signs, rhs))
+        equations.move_to((0,0,0))
+
+        self.play(Write(equations))
+
+        arrow = MathTex(r"\rightarrow")
+        arrow.next_to(cyclo_examples[0], LEFT)
+
+        self.play(Write(arrow))
+
+        colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, PINK]
         finished = [[] for i in range(7)]
 
         for i in range(7):
             divisors = self.divisors(i+1)
             for j in range(len(divisors)):
                 divisor = divisors[j]
-                finished[divisor-1].append(cyclo_examples[i])
+                finished[divisor-1].append(cyclo_examples[i][j+2])
                 hue = colors[divisor-1]
 
-                fact_highlight = SurroundingRectangle(finished[divisor-1][-1], color = hue, buff = .1)
-                self.play(Create(fact_highlight), *[manim.Indicate(k, color = hue) for k in finished[divisor-1]])
+                if j == len(divisors)-1:
+                    self.play(finished[divisor-1][-1].animate.set_color(hue))
+                self.play(Indicate(finished[divisor-1][0], color = hue), Indicate(finished[divisor-1][-1], color = hue))
+
+            if(i != 6):
+                self.play(arrow.animate.next_to(cyclo_examples[i+1], LEFT))
+            else:
+                self.play(FadeOut(arrow))
+
+        self.play(*[Indicate(cyclo_examples[i][0], color = WHITE) for i in range(7)])
+        self.play(equations.animate.scale(0.5).move_to((0, 0, 0)))
+
+        factorizations = [MathTex(r"{{(x-1)}}"), MathTex(r"{{(x+1)}}{{(x-1)}}"), MathTex(r"{{(x-e^{2\pi i \frac{1}{3} })(x-e^{2\pi i \frac{2}{3} })}}{{(x-1)}}"),
+                          MathTex(r"{{(x-e^{2\pi i \frac{1}{4} })(x-e^{2\pi i \frac{3}{4} })}}{{(x+1)}}{{(x-1)}}"), MathTex(r"{{(x-e^{2\pi i \frac{1}{5} })(x-e^{2\pi i \frac{2}{5} })(x-e^{2\pi i \frac{3}{5} })(x-e^{2\pi i \frac{4}{5} })}}{{(x-1)}}"),
+                          MathTex(r"{{(x-e^{2\pi i \frac{1}{6} })(x-e^{2\pi i \frac{5}{6} })}}{{(x-e^{2\pi i \frac{1}{3} })(x-e^{2\pi i \frac{2}{3} })}}{{(x+1)}}{{(x-1)}}"),
+                          MathTex(r"{{(x-e^{2\pi i \frac{1}{7} })(x-e^{2\pi i \frac{2}{7} })(x-e^{2\pi i \frac{3}{7} })(x-e^{2\pi i \frac{4}{7} })(x-e^{2\pi i \frac{5}{7} })(x-e^{2\pi i \frac{6}{7} })}}{{(x-1)}}")]
+
+        newLHS = VGroup(*factorizations)
+        newLHS.arrange(DOWN, aligned_edge=RIGHT, buff=0.5)
+        newLHS.scale(0.5)
+        newLHS.move_to((-2.28, 0, 0))
+
+        self.play(*[VGroup(equals_signs[i], rhs[i]).animate.next_to(factorizations[i], RIGHT, buff=0.1) for i in range(7)], ReplacementTransform(lhs, newLHS))
+
+        newFinished = [[] for i in range(7)]
+
+        arrow.next_to(factorizations[0], LEFT)
+        self.play(Write(arrow))
+
+        for i in range(7):
+            divisors = self.divisors(i+1)
+            for j in range(len(divisors)):
+                divisor = divisors[j]
+                newFinished[divisor-1].append(factorizations[i][len(divisors) - j - 1])
+                hue = colors[divisor-1]
+
+                if j == len(divisors)-1:
+                    self.play(newFinished[divisor-1][-1].animate.set_color(hue))
+                self.play(Indicate(newFinished[divisor-1][0], color = hue), Indicate(newFinished[divisor-1][-1], color = hue))
+
+            if(i != 6):
+                self.play(arrow.animate.next_to(factorizations[i+1][0], LEFT))
+            else:
+                self.play(FadeOut(arrow))
+
+        #fading out irrelevant terms
+        irrelevantTermsList = []
+
+        for i in range(7):
+            for j in range(1, len(self.divisors(i+1))):
+                irrelevantTermsList.append(factorizations[i][j])
+
+        for i in range(7):
+            for j in range(len(self.divisors(i+1))):
+                if j != len(self.divisors(i+1))-1:
+                    irrelevantTermsList.append(cyclo_examples[i][j+2])
+                else:
+                    irrelevantTermsList.append(cyclo_examples[i][-1][0])
+                    irrelevantTermsList.append(cyclo_examples[i][-1][-1])
+
+        self.play(*[FadeOut(i) for i in irrelevantTermsList])
+
+        #reordering the relevant terms (swapping LHS and RHS)
+
+        newRHS = VGroup(factorizations[i][0] for i in range(7))
+        newLHS = VGroup(cyclo_examples[i][-1][1:len(cyclo_examples[i][-1])-1] for i in range(7))
+        animations = []
+        eqX = -2.05
+
+        for r, eq, l in zip(newRHS, equals_signs, newLHS):
+            deltaX = eq.get_x()-eq.get_edge_center(LEFT)[0]
+
+            animations.append(eq.animate.move_to((eqX, eq.get_y(), 0)))
+            animations.append(r.animate.move_to((eqX+deltaX+0.1, eq.get_y(), 0), aligned_edge = LEFT))
+            animations.append(l.animate.move_to((eqX-deltaX-0.1, eq.get_y(), 0), aligned_edge = RIGHT))
+
+        self.play(*animations)
+
+        #changing everything to white
+        self.play(*[i.animate.set_color(WHITE) for i in newLHS], *[i.animate.set_color(WHITE) for i in newRHS])
+
+        #highlighting denominators row-by-row
+        for i in range(2,7):
+            buffer = []
+            for j in range(len(newRHS[i])):
+                if j%11 == 9:
+                    buffer.append(newRHS[i][j])
+
+            self.play(*[Indicate(k, color = colors[i], scale_factor = 3) for k in buffer], time=2)
+
+        #give an alternative form of lines 1 and 2
+        alt1 = MathTex(r"=(x-e^{2 \pi i \frac{0}{1}})")
+        alt1.scale(0.5)
+        alt1.next_to(newRHS[0], direction = RIGHT, buff = 0.1)
+        alt1.shift([0,newRHS[0].get_edge_center(DOWN)[1]-alt1.get_edge_center(DOWN)[1],0])
+
+        self.play(Write(alt1))
+        self.play(Indicate(alt1[0][-2], color = RED, scale_factor = 3), time = 2)
+
+        preAlt2 = MathTex(r"=(x-(-1))")
+        preAlt2.scale(0.5)
+        preAlt2.next_to(newRHS[1], direction=RIGHT, buff=0.1)
+
+        alt2 = MathTex(r"=(x-e^{2 \pi i \frac{1}{2}})")
+        alt2.scale(0.5)
+        alt2.next_to(newRHS[1], direction=RIGHT, buff=0.1)
+        alt2.shift([0, newRHS[1].get_edge_center(DOWN)[1] - alt2.get_edge_center(DOWN)[1], 0])
+
+        self.play(Write(preAlt2))
+        self.play(ReplacementTransform(preAlt2, alt2))
+        self.play(Indicate(alt2[0][-2], color = ORANGE, scale_factor = 3), time = 2)
+
+        #writing formula for cyclotomic polynomials
+        self.play(*[i.animate.shift(UP) for i in newLHS], *[i.animate.shift(UP) for i in newRHS], *[i.animate.shift(UP) for i in equals_signs], alt1.animate.shift(UP), alt2.animate.shift(UP))
+
+        etc = MathTex(r"\vdots")
+        etc.next_to(equals_signs[-1], direction = DOWN, buff = 0.5)
+
+        self.play(Write(etc))
+
+        newEq = MathTex(r"\Phi_n(x)", r"=", r"\prod_{\substack{0 \le k < n\\\frac{k}{n} \text{ is fully reduced} } } \left(x - e^{2\pi i \frac{k}{n} } \right)")
+        newEq[1].next_to(etc, direction = DOWN, buff = 0.1)
+        newEq[1].shift([0, -1, 0])
+        newEq[0].next_to(newEq[1], direction = LEFT, buff = 0.1)
+        newEq[2].next_to(newEq[1], direction=RIGHT, buff=0.1)
+
+        self.play(Write(newEq))
+
+        productAlt = MathTex(r"\substack{gcd(k,n) = 1}")
+        productAlt.move_to(newEq[2][6:23])
+
+        self.play(Transform(newEq[2][6:23], productAlt))
+
+        eqBox = SurroundingRectangle(newEq, buff = 0.1)
+        self.play(Create(eqBox))
+
+        self.wait(4)
 
     def construct(self):
-        #self.intro()
+        # play intro animation
+        self.intro()
+        # play definitions animation
         self.definitions()
-        # PLAY INTRO ANIMATION
