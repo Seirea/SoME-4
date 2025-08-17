@@ -1,19 +1,39 @@
-# from manim.mobject.svg.brace import BraceLabel
-# from manim import VGroup
+from manim.mobject.geometry.line import Line
+from manim.animation.speedmodifier import ChangeSpeed
+from manim.constants import PI
+from manim.mobject.value_tracker import ValueTracker
+from manim.mobject.geometry.arc import Dot
+from manim.mobject.types.point_cloud_mobject import Point
+from manim.mobject.graphing.coordinate_systems import ComplexPlane
+from manim.utils.color.manim_colors import WHITE
+from manim.animation.indication import Indicate
+from manim.utils.color.manim_colors import PINK
+from manim.utils.color.manim_colors import PURPLE
+from manim.utils.color.manim_colors import BLUE
+from manim.utils.color.manim_colors import GREEN
+from manim.utils.color.manim_colors import YELLOW
+from manim.utils.color.manim_colors import ORANGE
+from manim.utils.color.manim_colors import RED
+from manim.mobject.svg.brace import BraceLabel
+from manim import VGroup
 from typing import Callable
-# from manim.animation.animation import Animation
-# from manim.animation.creation import Create
-# from manim.mobject.geometry.shape_matchers import SurroundingRectangle
-# from manim.animation.growing import GrowArrow
-# from manim.mobject.geometry.line import Arrow
-# from manim.mobject.mobject import Mobject
-# from manim.animation.transform import ReplacementTransform
-# from manim.mobject.text.tex_mobject import MathTex
-# from manim.animation.transform import Restore
+from manim.animation.animation import Animation
+from manim.animation.creation import Create
+from manim.mobject.geometry.shape_matchers import SurroundingRectangle
+from manim.animation.growing import GrowArrow
+from manim.mobject.geometry.line import Arrow
+from manim.mobject.mobject import Mobject
+from manim.animation.transform import ReplacementTransform
+from manim.mobject.text.tex_mobject import MathTex
+from manim.animation.transform import Restore
 # import manim
-# from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, Transform, FadeIn
-from manim import *
-from rich.console import detect_legacy_windows
+from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, RIGHT, Transform, FadeIn
+# from manim import *
+# from rich.console import detect_legacy_windows
+import numpy as np
+
+mt = MathTex
+pre_angle = 0
 
 # print(MathTex(r"e^{2\pi i \frac{1}{6}}", r"1")[0][-1])
 #
@@ -41,12 +61,16 @@ class Cyclo(Scene):
         self.level[1] += 1
 
     def titlecard(self, title: str, mob: Mobject | None = None):
-        text = Tex(f"{self.level[0]}.{self.level[1]} " + title)
+        subt = "" if self.level[1] == 0 else f".{self.level[1]}"
+
+        text = Tex(f"{self.level[0]}{subt} " + title)
         text.to_edge(UP + LEFT)  # pyrefly: ignore
         if mob is not None:
             self.play(FadeIn(text), FadeIn(mob))
             self.play(FadeOut(text), FadeOut(mob))
         else:
+            if self.level[1] == 0:
+                text.move_to(np.array((0, 0, 0)))
             self.play(FadeIn(text))
             self.play(FadeOut(text))
         return text
@@ -222,14 +246,14 @@ class Cyclo(Scene):
 
                 if j == len(divisors)-1:
                     self.play(finished[divisor-1][-1].animate.set_color(hue))
-                self.play(Indicate(finished[divisor-1][0], color = hue), Indicate(finished[divisor-1][-1], color = hue))
+                self.play(Indicate(finished[divisor-1][0], color = str(hue)), Indicate(finished[divisor-1][-1], color = str(hue)))
 
             if(i != 6):
                 self.play(arrow.animate.next_to(cyclo_examples[i+1], LEFT))
             else:
                 self.play(FadeOut(arrow))
 
-        self.play(*[Indicate(cyclo_examples[i][0], color = WHITE) for i in range(7)])
+        self.play(*[Indicate(cyclo_examples[i][0], color = str(WHITE)) for i in range(7)])
         self.play(equations.animate.scale(0.5).move_to((0, 0, 0)))
 
         factorizations = [MathTex(r"{{(x-1)}}"), MathTex(r"{{(x+1)}}{{(x-1)}}"), MathTex(r"{{(x-e^{2\pi i \frac{1}{3} })(x-e^{2\pi i \frac{2}{3} })}}{{(x-1)}}"),
@@ -258,7 +282,7 @@ class Cyclo(Scene):
 
                 if j == len(divisors)-1:
                     self.play(newFinished[divisor-1][-1].animate.set_color(hue))
-                self.play(Indicate(newFinished[divisor-1][0], color = hue), Indicate(newFinished[divisor-1][-1], color = hue))
+                self.play(Indicate(newFinished[divisor-1][0], color = str(hue)), Indicate(newFinished[divisor-1][-1], color = str(hue)))
 
             if(i != 6):
                 self.play(arrow.animate.next_to(factorizations[i+1][0], LEFT))
@@ -342,7 +366,7 @@ class Cyclo(Scene):
 
         newEq = MathTex(r"\Phi_n(x)", r"=", r"\prod_{\substack{0 \le k < n\\\frac{k}{n} \text{ is fully reduced} } } \left(x - e^{2\pi i \frac{k}{n} } \right)")
         newEq[1].next_to(etc, direction = DOWN, buff = 0.1)
-        newEq[1].shift([0, -1, 0])
+        newEq[1].shift(np.array([0, -1, 0]))
         newEq[0].next_to(newEq[1], direction = LEFT, buff = 0.1)
         newEq[2].next_to(newEq[1], direction=RIGHT, buff=0.1)
 
@@ -358,8 +382,197 @@ class Cyclo(Scene):
 
         self.wait(4)
 
+    def the_result(self):
+
+        self.section()
+        self.titlecard("The Central Result")
+        # ...
+        
+        self.subsection()
+        self.titlecard("Divisibility", mt(r"\Phi_{hq}(x)\mid\Phi_q(x^h)"))
+
+        prod = mt(r"\Phi_n(x)=\prod_{\substack{0\leq k \leq n \\ \gcd(k,n) = 1}}\left(x-e^{2\pi i \frac{k}{n}}\right)")
+        prod2 = mt(r"\Phi_{hq}(x)=\prod_{\substack{0\leq k \leq hq \\ \gcd(k,hq) = 1}}\left(x-e^{2\pi i \frac{k}{hq}}\right)")
+
+        self.play(Write(prod))
+        self.play(prod.animate.become(prod2))
+        self.play(prod.animate.to_edge(UP))
+
+        # self.play(Transform(prod, prod2))
+        lrarrow = mt(r"\leftrightarrow").move_to(np.array([0,0,0]))
+        divis = mt(r"\Phi_{hq}(x)\mid\Phi_q(x^h)").next_to(lrarrow, LEFT)
+        multi = VGroup(
+                mt(r"(x-e^{2\pi i \frac{1}{hq}})\mid \Phi_q(x^h)"),
+                mt(r"\vdots"),
+                mt(r"(x-e^{2\pi i \frac{hq-1}{hq}})\mid \Phi_q(x^h)"),
+        ).arrange(DOWN).next_to(lrarrow, RIGHT)
+
+        self.play(FadeIn(lrarrow), Write(divis))
+        self.play(Write(multi))
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &\gcd(k,hq)=1\text{:}", font_size=30),
+                mt(r"(x-e^{2\pi i \frac{k}{hq}})\mid \Phi_q(x^h)")
+        ).arrange(DOWN).move_to(multi)
+
+        self.play(multi.animate.become(new_multi))
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &\gcd(k,hq)=1\text{:}", font_size=30),
+                mt(r"\Phi_q(x^h)\mid_{e^{2\pi i \frac{k}{hq}}} = 0")
+        ).arrange(DOWN).move_to(multi)
+
+        self.play(multi.animate.become(new_multi))
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &\gcd(k,hq)=1\text{:}", font_size=30),
+                mt(r"\Phi_q\left(\left(e^{2\pi i \frac{k}{hq}}\right)^h\right) = 0")
+        ).arrange(DOWN).move_to(multi)
+   
+        self.play(multi.animate.become(new_multi))
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &\gcd(k,hq)=1\text{:}", font_size=30),
+                mt(r"\Phi_q\left(e^{2\pi i \frac{k}{q}}\right) = 0")
+        ).arrange(DOWN).move_to(multi)
+              
+        self.play(multi.animate.become(new_multi))
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &", r"\gcd(k,h)=1", r"\text{ and } \gcd(k, q)=1\text{:}", font_size=30),
+                mt(r"\Phi_q\left(e^{2\pi i \frac{k}{q}}\right) = 0")
+        ).arrange(DOWN).move_to(multi)
+      
+        self.play(multi.animate.become(new_multi))
+
+        self.play(Indicate(multi[0][1]))
+
+        zeq = mt(r"0 = 0")
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &", r"\gcd(k,h)=1", r"\text{ and } \gcd(k, q)=1\text{:}", font_size=28),
+                zeq
+        ).arrange(DOWN).move_to(multi)
+      
+        self.play(multi.animate.become(new_multi))
+
+        zeq1 = mt(r"0 = 0")
+
+        new_multi = VGroup(
+                mt(r"&\forall \ 0\leq k \leq hq \text{ where}\\ &", r"\gcd(k,h)=1", r"\text{ and } \gcd(k, q)=1\text{:}", font_size=28),
+                zeq1.set_opacity(0)
+        ).arrange(DOWN).move_to(multi)
+      
+        multi.become(new_multi)
+        
+        self.play(Indicate(zeq))
+
+        self.play(FadeOut(lrarrow), FadeOut(multi), divis.animate.move_to(np.array((0,0,0))), FadeOut(zeq))
+
+        
+        highBox = SurroundingRectangle(divis, buff = 0.1)
+        self.play(Create(highBox))
+
+        self.subsection()
+        self.subsection()
+        self.titlecard("Complex Magnitudes", mt(r"\|a+bi\|=\sqrt{a^2+b^2}"))
+
+
+        monic_polys = mt(r"Q(x)\cdot", r"\Phi_{hq}(x)", "&=", r"\Phi_q(x^h)")
+        arrows = mt(r"\nwarrow\ &\ \ \ \nearrow").next_to(monic_polys, DOWN)
+        arrows.shift(np.array((monic_polys[2].get_x() - arrows.get_x(), 0, 0)))
+        label = Tex(r"monic integer polynomials").next_to(arrows, DOWN)
+
+        self.play(Write(monic_polys))
+        self.wait()
+        self.play(Write(arrows), FadeIn(label))
+        self.wait()
+        self.play(FadeOut(arrows), FadeOut(label))
+
+        monic_polys_b = mt(r"Q(b)\cdot", r"\Phi_{hq}(b)", "&=", r"\Phi_q(b^h)")
+        eq_b = mt("= p")
+        eq_b.shift(np.array((monic_polys_b[2].get_x() - eq_b.get_x(), 0, 0)))
+
+        self.hide_all()
+
+        mag_phi_hq = mt(r"\left|\Phi_hq(b)\right| = \left\| \prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq)=1}} \left(b-e^{2\pi i \frac{k}{hq}}\right) \right\|")
+        mag_phi_hq_2 = mt(r"\left|\Phi_hq(b)\right| = \left\| \prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq)=1}} \left(b-e^{2\pi i \frac{k}{hq}}\right) \right\|")
+
+        self.play(Write(mag_phi_hq))
+        self.play(ReplacementTransform(mag_phi_hq, mag_phi_hq_2))
+
+        self.wait()
+        
+        self.hide_all()
+
+        plane = ComplexPlane().add_coordinates().scale(8/5)
+
+
+        moving_point = Dot(plane.n2p(1+0j), color=ORANGE)
+
+        k = ValueTracker(0)
+
+        maths_label = mt(r"e^{i \theta}", color=ORANGE).to_edge(UP + RIGHT) # pyrefly: ignore
+
+        k_label = Text("θ = 0", font_size=24)\
+                .next_to(maths_label, DOWN)\
+                .add_updater(
+                        lambda m: m.become(Text(f"θ = {np.around(k.get_value(), 3)}", font_size=24)
+                                .next_to(maths_label, DOWN))
+                )
+                
+        def eval_p(x) -> complex:
+            return np.exp(1.j*x)
+        def eval_rot(theta) -> float:
+                global pre_angle
+                
+                new_angle = np.arctan(np.sin(theta)/(2-np.cos(theta)))
+                dtheta = pre_angle - new_angle 
+                pre_angle = new_angle
+                return dtheta
+        def cpx_str(z: complex) -> str:
+            return str(np.around(z, 3)).replace("j", "i").replace(")", "").replace("(", "").replace("+", " + ").replace("-", " - ")
+
+
+        inner_radius = Line(np.array((0,0,0)), np.array((0,0,0)))
+        inner_radius.add_updater(lambda m: m.become(Line(
+                plane.n2p(0),
+                plane.n2p(eval_p(k.get_value())),                                        
+        )))
+        
+        outer_line = Line(np.array((0,0,0)), np.array((0,0,0)))
+        outer_line.add_updater(lambda m: m.become(Line(
+                plane.n2p(eval_p(k.get_value())),
+                plane.n2p(2), 0,
+        )))
+
+
+        length_label = mt(r"\left\|b-e^{i \theta}\right\|")
+        length_label.add_updater(
+                lambda m: m
+                        .move_to(plane.n2p((eval_p(k.get_value())+2)/2))
+                        .shift( np.array([ 0, 0.3, 0 ]) )
+                        .rotate( eval_rot( k.get_value() ))
+        )
+
+
+        circle = plane.plot_parametric_curve(lambda t: np.array([np.cos(t), np.sin(t)]), t_range = [0, 2*PI])
+        
+        point_label = Text("1+0i", font_size=20).add_updater(lambda m: m.become(Text(cpx_str(eval_p(k.get_value())), font_size=20)).next_to(moving_point, UP))        
+
+        moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
+        moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
+
+        self.add(plane, moving_point, point_label, maths_label, k_label, inner_radius, outer_line, length_label, circle)
+
+
+        self.play(ChangeSpeed(k.animate.set_value(2*PI), speedinfo={0: 0.125}))
+        self.wait()
+
     def construct(self):
         # play intro animation
-        self.intro()
+        # self.intro()
         # play definitions animation
-        self.definitions()
+        # self.definitions()
+        # play section 6
+        self.the_result()
