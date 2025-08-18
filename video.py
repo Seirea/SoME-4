@@ -505,65 +505,72 @@ class Cyclo(Scene):
         
         self.hide_all()
 
-        plane = ComplexPlane().add_coordinates().scale(8/5)
+        plane = ComplexPlane().add_coordinates().scale(8/3)
 
 
         moving_point = Dot(plane.n2p(1+0j), color=ORANGE)
 
         k = ValueTracker(0)
 
-        maths_label = mt(r"e^{i \theta}", color=ORANGE).to_edge(UP + RIGHT) # pyrefly: ignore
+        #maths_label = mt(r"e^{i \theta}", color=ORANGE).to_edge(UP + RIGHT) # pyrefly: ignore
+        b_label = mt("b", font_size = 35, color = ORANGE).move_to(plane.n2p(2)).shift([0, 0.3, 0])
+        b_point = Dot(plane.n2p(2), color = ORANGE)
 
-        k_label = Text("θ = 0", font_size=24)\
-                .next_to(maths_label, DOWN)\
-                .add_updater(
-                        lambda m: m.become(Text(f"θ = {np.around(k.get_value(), 3)}", font_size=24)
-                                .next_to(maths_label, DOWN))
-                )
+        #k_label = Text("θ = 0", font_size=24)\
+                # .next_to(maths_label, DOWN)\
+                # .add_updater(
+                #         lambda m: m.become(Text(f"θ = {np.around(k.get_value(), 3)}", font_size=24)
+                #                 .next_to(maths_label, DOWN))
+                # )
                 
         def eval_p(x) -> complex:
             return np.exp(1.j*x)
         def eval_rot(theta) -> float:
-                global pre_angle
+                # global pre_angle
                 
-                new_angle = np.arctan(np.sin(theta)/(2-np.cos(theta)))
-                dtheta = pre_angle - new_angle 
-                pre_angle = new_angle
-                return dtheta
+                return -np.arctan(np.sin(theta)/(2-np.cos(theta)))
+                # dtheta = pre_angle - new_angle
+                # pre_angle = new_angle
+                # return dtheta
         def cpx_str(z: complex) -> str:
             return str(np.around(z, 3)).replace("j", "i").replace(")", "").replace("(", "").replace("+", " + ").replace("-", " - ")
 
 
-        inner_radius = Line(np.array((0,0,0)), np.array((0,0,0)))
+        inner_radius = Line(np.array((0,0,0)), np.array((0,0,0)), stroke_width = 1)
         inner_radius.add_updater(lambda m: m.become(Line(
                 plane.n2p(0),
-                plane.n2p(eval_p(k.get_value())),                                        
+                plane.n2p(eval_p(k.get_value())),
+                stroke_width = 1
         )))
         
-        outer_line = Line(np.array((0,0,0)), np.array((0,0,0)))
+        outer_line = Line(np.array((0,0,0)), np.array((0,0,0)), stroke_width = 1)
         outer_line.add_updater(lambda m: m.become(Line(
                 plane.n2p(eval_p(k.get_value())),
                 plane.n2p(2), 0,
+                stroke_width = 1
         )))
 
+        value_label = mt(rf"e^{{i {np.around(k.get_value(), 2)} }}", font_size = 35, color = ORANGE).next_to(moving_point, UP, buff = 0.1).add_updater(
+            lambda m: m.become (mt(rf"e^{{i {np.around(k.get_value(), 2)} }}", font_size = 35, color = ORANGE).next_to(moving_point, UP, buff = 0.1))
+        )
 
-        length_label = mt(r"\left\|b-e^{i \theta}\right\|")
+
+        length_label = mt(r"\left\|b-e^{i \theta}\right\|", font_size = 35, color = ORANGE)
         length_label.add_updater(
                 lambda m: m
+                        .become(mt(rf"\left\|b-e^{{i {np.around(k.get_value(), 2)} }}\right\|", font_size = 35, color = ORANGE))
                         .move_to(plane.n2p((eval_p(k.get_value())+2)/2))
-                        .shift( np.array([ 0, 0.3, 0 ]) )
+                        .shift( np.array([ 0, 0.2, 0 ]) )
                         .rotate( eval_rot( k.get_value() ))
         )
 
 
-        circle = plane.plot_parametric_curve(lambda t: np.array([np.cos(t), np.sin(t)]), t_range = [0, 2*PI])
-        
-        point_label = Text("1+0i", font_size=20).add_updater(lambda m: m.become(Text(cpx_str(eval_p(k.get_value())), font_size=20)).next_to(moving_point, UP))        
+        circle = plane.plot_parametric_curve(lambda t: np.array([np.cos(t), np.sin(t)]), t_range = [0, 2*PI], stroke_width = 1)
 
         moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
         moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
 
-        self.add(plane, moving_point, point_label, maths_label, k_label, inner_radius, outer_line, length_label, circle)
+        self.add(plane, inner_radius, outer_line, length_label, circle, value_label, b_label, b_point, moving_point)
 
 
         self.play(ChangeSpeed(k.animate.set_value(2*PI), speedinfo={0: 0.125}))
