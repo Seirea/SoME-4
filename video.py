@@ -211,6 +211,7 @@ class Cyclo(Scene):
         self.subsection()
         self.titlecard("Cyclotomic Polynomials", MathTex(r"\Phi_n(x)"))
 
+        self.next_section("1", skip_animations = True)
 
         cyclo_examples = [MathTex(r"x-1", r"=", r"(x-1)"), MathTex(r"x^2-1", r"=", r"(x-1)", r"(x+1)"), MathTex(r"x^3-1", r"=", r"(x-1)", r"(x^2+x+1)"), MathTex(r"x^4-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+1)"), MathTex(r"x^5-1", r"=", r"(x-1)", r"(x^4+x^3+x^2+x+1)"), MathTex(r"x^6-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+x+1)", r"(x^2-x+1)"), MathTex(r"x^7-1", r"=", r"(x-1)", r"(x^6+x^5+x^4+x^3+x^2+x+1)")]
 
@@ -379,6 +380,106 @@ class Cyclo(Scene):
 
         eqBox = SurroundingRectangle(newEq, buff = 0.1)
         self.play(Create(eqBox))
+
+        self.next_section("2", skip_animations = False)
+        #primes section
+
+        self.subsection()
+        self.titlecard("For Primes", mt(r"x^{q-1}+x^{q-2}+...+x+1"))
+
+        cyclo_examples_p = [mt(r"\Phi_1(x)", "=", "x - 1"), mt(r"\Phi_2(x)", "=", "x + 1"), mt(r"\Phi_3(x)", "=", r"x^2 + x + 1"), mt(r"\Phi_4(x)", "=", r"x^2 + 1"),
+            mt(r"\Phi_5(x)", "=", r"x^4 + x^3 + x^2 + x + 1"), mt(r"\Phi_6(x)", "=", r"x^2 - x + 1"), mt(r"\Phi_7(x)", "=", r"x^6 + x^5 + x^4 + x^3 + x^2 + x + 1")]
+
+        lhs = VGroup(cyclo_examples_p[i][0] for i in range(7))
+        equals_signs = VGroup(cyclo_examples_p[i][1] for i in range(7))
+        rhs = VGroup(cyclo_examples_p[i][2:] for i in range(7))
+
+        lhs.arrange(DOWN, aligned_edge=RIGHT, buff=0.5)
+
+        for l, eq, r in zip(lhs, equals_signs, rhs):
+            eq.next_to(l, RIGHT, buff=0.1)
+            r.next_to(eq, RIGHT, buff=0.1)
+
+        equations = VGroup(VGroup(l, eq, r) for l, eq, r in zip(lhs, equals_signs, rhs))
+        equations.move_to((0, 0, 0))
+
+        self.play(Write(equations))
+
+        primeRows = VGroup(*[cyclo_examples_p[i-1] for i in [2,3,5,7]])
+        nonPrimeRows = VGroup(*[cyclo_examples_p[i-1] for i in [1,4,6]])
+        self.play(FadeOut(nonPrimeRows), primeRows.animate.arrange(DOWN, aligned_edge = LEFT)) #wrong
+
+        newLHS = mt(r"\Phi_p(x)")
+        newRHS = mt(r"x^{p-1}+x^{p-2}+...+x+1")
+        eq = mt("=")
+        qmark = mt("?")
+        eq.move_to(equals_signs)
+        newLHS.next_to(eq, direction = LEFT)
+        newRHS.next_to(eq, direction = RIGHT)
+        qmark.next_to(newRHS, direction = RIGHT)
+        equation = VGroup(newLHS, eq, newRHS)
+
+        self.play(ReplacementTransform(primeRows, equation))
+        self.play(Write(qmark))
+        #submobj ineff
+        equation = VGroup(newLHS, eq, newRHS)
+        self.play(FadeOut(qmark))
+        self.play(Indicate(equation, color = WHITE))
+
+        geo_form = mt(r"\frac{x^p-1}{x-1}")
+        geo_form.next_to(equation[1], direction = RIGHT)
+        self.play(Transform(equation[2], geo_form))
+        self.play(equation.animate.shift([-equation[1].get_x(), -equation[1].get_y(), -equation[1].get_z()]))
+
+        phi_p = mt(r"\prod_{\substack{0 \le k \le p\\gcd(k,p) = 1}} \left(x - e^{2\pi i \frac{k}{p}} \right)")
+        phi_p.next_to(equation[1], direction = LEFT)
+        #phi_p.shift([0, -0.5, 0])
+        self.play(Transform(equation[0], phi_p))
+
+        newSubstack = mt(r"\substack{p\nmid k}")
+        newSubstack1 = mt(r"\substack{k \neq 0}")
+
+        newSubstack.move_to(equation[0][0][6:16])
+        newSubstack1.move_to(equation[0][0][6:16])
+
+        self.play(equation[0][0][6:16].animate.become(newSubstack))
+        self.play(equation[0][0][6:16].animate.become(newSubstack1))
+        self.play(FadeOut(equation[0][0][6:16]))
+        one = mt(r"\substack{1}")
+        one.move_to(equation[0][0][1])
+        self.play(equation[0][0][1].animate.become(one))
+
+        # #index 4
+        # bufferRHS = mt(r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-1}")
+        #
+
+        self.next_section("3", skip_animations=False)
+
+        newFraction = mt(r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-1}")
+        newFraction.next_to(equation[1], direction = RIGHT)
+        self.play(ReplacementTransform(equation[2][0][4], newFraction[0][17]), ReplacementTransform(equation[2][0][:4], newFraction[0][:17]), ReplacementTransform(equation[2][0][5:], newFraction[0][18:]))
+
+        exponentialForm = mt(r"e^0")
+        exponentialForm.next_to(newFraction[0][19], direction = RIGHT)
+        self.play(Transform(newFraction[0][20], exponentialForm))
+
+        exponentialForm = mt(r"e^{2\pi i \frac{0}{p}}")
+        exponentialForm.next_to(newFraction[0][19], direction=RIGHT)
+        self.play(Transform(newFraction[0][20], exponentialForm))
+
+        one.move_to(newFraction[0][1])
+        self.play(FadeOut(newFraction[0][17:]), Transform(newFraction[0][1], one))
+        # equationTransform("r", r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-e^0}")
+        # equationTransform("r", r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-e^{2\pi i \frac{0}{p}}}")
+        # equationTransform("r", r"\prod_{\substack{1 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)")
+
+        newRHS = phi_p.copy()
+        newRHS.next_to(eq, direction = RIGHT)
+        newRHS.shift([0, phi_p.get_y()-newRHS.get_y(), 0])
+
+        self.play(newFraction[0][0].animate.scale_to_fit_height(newRHS[0][0].height).move_to(newRHS[0][0]), newFraction[0][1:6].animate.move_to(newRHS[0][1:6]), newFraction[0][6:17].animate.move_to(newRHS[0][16:27]))
+
+        self.play(Indicate(newFraction[0][:17]), Indicate(equation[0][0][:6]), Indicate(equation[0][0][16:]))
 
         self.wait(4)
 
@@ -580,6 +681,6 @@ class Cyclo(Scene):
         # play intro animation
         # self.intro()
         # play definitions animation
-        # self.definitions()
+        self.definitions()
         # play section 6
-        self.the_result()
+        #self.the_result()
