@@ -31,6 +31,7 @@ from manim import Scene, Text, Tex, Write, Unwrite, FadeOut, DOWN, UP, LEFT, RIG
 # from manim import *
 # from rich.console import detect_legacy_windows
 import numpy as np
+from manim import AnimationGroup
 
 mt = MathTex
 pre_angle = 0
@@ -407,7 +408,28 @@ class Cyclo(Scene):
 
         primeRows = VGroup(*[cyclo_examples_p[i-1] for i in [2,3,5,7]])
         nonPrimeRows = VGroup(*[cyclo_examples_p[i-1] for i in [1,4,6]])
-        self.play(FadeOut(nonPrimeRows), primeRows.animate.arrange(DOWN, aligned_edge = LEFT)) #wrong
+        self.play(FadeOut(nonPrimeRows), primeRows.animate.arrange(DOWN, aligned_edge = LEFT))
+
+        animGroupList = []
+
+        for i in range(7):
+            buffer = []
+            for j in range(4):
+                maxIndex = 3*([2,3,5,7][j]-2)+2
+                if 3*i+3 <= maxIndex:
+                    buffer.append(primeRows[j][2][3*i:3*i+2])
+                elif 3*i < maxIndex:
+                    buffer.append(primeRows[j][2][3*i])
+                elif 3*i-3 < maxIndex:
+                    buffer.append(primeRows[j][2][maxIndex])
+
+            animGroupList.append(Indicate(VGroup(*buffer)).set_run_time(0.5))
+
+        animGroup = AnimationGroup(*animGroupList, lag_ratio = 0.2)
+        self.play(animGroup)
+
+
+            # self.play(*[Indicate(primeRows[j][2][i]) for j in range(4) if [2,3,5,7][j] >= i], time = 0.65)
 
         newLHS = mt(r"\Phi_p(x)")
         newRHS = mt(r"x^{p-1}+x^{p-2}+...+x+1")
@@ -421,7 +443,6 @@ class Cyclo(Scene):
 
         self.play(ReplacementTransform(primeRows, equation))
         self.play(Write(qmark))
-        #submobj ineff
         equation = VGroup(newLHS, eq, newRHS)
         self.play(FadeOut(qmark))
         self.play(Indicate(equation, color = WHITE))
@@ -433,7 +454,6 @@ class Cyclo(Scene):
 
         phi_p = mt(r"\prod_{\substack{0 \le k \le p\\gcd(k,p) = 1}} \left(x - e^{2\pi i \frac{k}{p}} \right)")
         phi_p.next_to(equation[1], direction = LEFT)
-        #phi_p.shift([0, -0.5, 0])
         self.play(Transform(equation[0], phi_p))
 
         newSubstack = mt(r"\substack{p\nmid k}")
