@@ -784,25 +784,80 @@ class Cyclo(Scene):
         # Step 27
         self.hide_all()
 
-        a27 = mt(r"|Q(b)|", r"\times", r"|\Phi_{hq}(b)| = p").shift(UP)
-        a27.to_edge(UP)
-        b27 = mt(r"\prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq) = 1}} || b-e^{i2\pi \frac{k}{hq}} || = |\Phi_{hq} (b)|")
-        b27.next_to(a27, DOWN)
-        b27.shift(DOWN)
-        c27 = mt(r"\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k \leq hq}} || b-e^{i2\pi \frac{k}{hq}} || = |Q(b)|")
+        top27 = mt(r"|Q(b)|", r"\times", r"|\Phi_{hq}(b)| = p").shift(UP)
+        top27.to_edge(UP)
+        mid27 = mt(r"\prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq) = 1}} || b-e^{i2\pi \frac{k}{hq}} || = |\Phi_{hq} (b)|")
+        mid27.next_to(top27, DOWN)
+        mid27.shift(DOWN)
+        bot27 = mt(r"\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k \leq hq}} || b-e^{i2\pi \frac{k}{hq}} || = |Q(b)|")
 
-        c27.next_to(b27, DOWN)
-        c27.shift(DOWN)
+        bot27.next_to(mid27, DOWN)
+        bot27.shift(DOWN)
 
-        self.play(Write(a27), Write(b27), Write(c27))
+        self.play(Write(top27), Write(mid27), Write(bot27))
         self.wait()
         # Step 28
 
         d27 = mt(r"1 <")
-        d27.next_to(b27, LEFT)
+        d27.next_to(mid27, LEFT)
         self.play(Write(d27))
 
         self.wait()
+
+        # Step 29
+        self.play(FadeOut(mid27), FadeOut(d27))
+        d27 = mt(r"1 =")
+        d27.next_to(mid27, LEFT)
+
+        self.play(bot27.animate.move_to(mid27))
+        self.play(Write(d27))
+
+        self.wait()
+
+        # Step 30
+        nwarrow = mt(r"\nwarrow")
+        prod = Tex(r"must be an empty product")
+
+        nwarrow.next_to(mid27, DOWN)
+        nwarrow.shift(LEFT)
+        prod.next_to(nwarrow, DOWN + RIGHT)
+        self.play(Write(nwarrow), Write(prod))
+
+        # 31
+        prod2 = mt(r"Q(x) = 1")
+        prod2.next_to(nwarrow, DOWN + RIGHT)
+        self.play(ReplacementTransform(prod, prod2))
+        self.wait()
+
+        # 32
+        box = SurroundingRectangle(prod2)
+        self.play(Write(box))
+        self.wait()
+
+        # 33
+        self.hide_all()
+        top33 = mt(r"Q(x)", r"\times", r"\Phi_{hq}(x) = \Phi_{q}(x^h)")
+        self.play(Write(top33))
+
+        top33_p2 = mt(r"1", r"\times", r"\Phi_{hq}(x) = \Phi_{q}(x^h)")
+        top33_p2.move_to(top33)
+        self.play(ReplacementTransform(top33, top33_p2))
+
+        self.wait()
+
+        # 34
+        print(top33_p2[0])
+        # top33_p3 = mt(r"\Phi_{hq}(x) = \Phi_{q}(x^h)")
+        # top33_p3.move_to(top33_p2)
+        # self.play(Transform(top33_p2, top33_p3))
+        self.play(FadeOut(top33_p2[0]), FadeOut(top33_p2[1]), top33_p2[2:].animate.move_to((0,0,0)))
+
+        # 35
+        box2 = SurroundingRectangle(top33_p2[2:])
+        self.play(Write(box2))
+
+        self.wait()
+
 
 
     def construct(self):
