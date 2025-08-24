@@ -660,6 +660,7 @@ class Cyclo(Scene):
         eq1.shift(DOWN)
         orz.next_to(eq1, DOWN)
         eq2.next_to(orz, DOWN)
+
         eq2.shift([eq1[1].get_x()-eq2[1].get_x(), 0, 0])
 
         self.play(AnimationGroup(Write(eq1), Write(orz), Write(eq2), lag_ratio = 0.2))
@@ -707,6 +708,7 @@ class Cyclo(Scene):
 
         self.play(Indicate(mag1), Indicate(mag2))
 
+
         #self.play(Write(mag_phi_hq), Write(mag_q))
         #self.play(ReplacementTransform(mag_phi_hq, mag_phi_hq_2), ReplacementTransform(mag_q, mag_q2))
 
@@ -718,12 +720,8 @@ class Cyclo(Scene):
 
         self.wait()
 
-        self.next_section("result 3", skip_animations=False) #TODO REMOVE LATER
-
         self.subsubsection()
         self.titlecard("", mt(r"\left\|b-e^{2\pi i\frac{k}{hq}}\right\|"))
-
-
 
         plane = ComplexPlane(
             #x_range=[-4, 4],
@@ -869,6 +867,7 @@ class Cyclo(Scene):
 
         self.hide_all()
 
+
     def step_27(self):
         # Step 27
         self.hide_all()
@@ -898,7 +897,6 @@ class Cyclo(Scene):
         d27 = mt(r"1 =")
         d27.next_to(b27, LEFT)
         self.play(Write(d27))
-
 
 
     def construct(self):
