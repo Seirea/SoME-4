@@ -43,6 +43,9 @@ pre_angle = 0
 # else:
 #     print("buh")
 
+def rearrange(a, b):
+    return a.animate.scale_to_fit_height(b.height).move_to(b)
+
 class Cyclo(Scene):
     level = [0, 0, 0]
 
@@ -54,6 +57,7 @@ class Cyclo(Scene):
             )
 
     def section(self):
+        self.hide_all()
         self.level[0] += 1
         self.level[1] = 0
         self.level[2] = 0
@@ -71,8 +75,8 @@ class Cyclo(Scene):
             "" if self.level[1] == 0 and self.level[2] == 0
             else f".{self.level[1]}" if self.level[2] == 0
             else f".{self.level[1]}.{self.level[2]}")
-
-        text = Tex(f"{self.level[0]}{subt} " + title)
+        ident = str(self.level[0]) + subt
+        text = Tex(f"{ident} {title}")
         text.to_edge(UP + LEFT)  # pyrefly: ignore
         if mob is not None:
             self.play(FadeIn(text), FadeIn(mob))
@@ -82,7 +86,7 @@ class Cyclo(Scene):
                 text.move_to(np.array((0, 0, 0)))
             self.play(FadeIn(text))
             self.play(FadeOut(text))
-        return text
+        self.next_section(ident)
 
     def divisors(self, n):
         divs = []
@@ -205,6 +209,14 @@ class Cyclo(Scene):
 
         # not sure about this one
 
+        line_1 = mt(r"\underbrace{10001}00&0\underbrace{10001}{}_b\nonumber\\")
+        arr = mt(r"\downarrow").next_to(line_1, DOWN)
+        line_2 = mt(r"10001{}_b&|1000100010001{}_b\nonumber").next_to(line_1, DOWN)
+
+        self.play(Write(line_1))
+        self.play(Write(arr))
+        self.play(Write(line_2))
+
         self.hide_all()
         stick_figure = Tex("STICK FIGURE")  # i can make one for us :)
         self.play(Create(stick_figure))
@@ -220,7 +232,7 @@ class Cyclo(Scene):
         self.subsection()
         self.titlecard("Cyclotomic Polynomials", MathTex(r"\Phi_n(x)"))
 
-        self.next_section("1", skip_animations = True)
+        #self.next_section("1", skip_animations = False)
 
         cyclo_examples = [MathTex(r"x-1", r"=", r"(x-1)"), MathTex(r"x^2-1", r"=", r"(x-1)", r"(x+1)"), MathTex(r"x^3-1", r"=", r"(x-1)", r"(x^2+x+1)"), MathTex(r"x^4-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+1)"), MathTex(r"x^5-1", r"=", r"(x-1)", r"(x^4+x^3+x^2+x+1)"), MathTex(r"x^6-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+x+1)", r"(x^2-x+1)"), MathTex(r"x^7-1", r"=", r"(x-1)", r"(x^6+x^5+x^4+x^3+x^2+x+1)")]
 
@@ -233,6 +245,7 @@ class Cyclo(Scene):
         for l, eq, r in zip(lhs, equals_signs, rhs):
             eq.next_to(l, RIGHT, buff=0.1)
             r.next_to(eq, RIGHT, buff=0.1)
+            r.shift([0, l[0].get_y()-r[1].get_y(), 0])
 
         equations = VGroup(VGroup(l, eq, r) for l, eq, r in zip(lhs, equals_signs, rhs))
         equations.move_to((0,0,0))
@@ -240,7 +253,7 @@ class Cyclo(Scene):
         self.play(Write(equations))
 
         arrow = MathTex(r"\rightarrow")
-        arrow.next_to(cyclo_examples[0], LEFT)
+        arrow.next_to(cyclo_examples[0][0], LEFT)
 
         self.play(Write(arrow))
 
@@ -259,7 +272,7 @@ class Cyclo(Scene):
                 self.play(Indicate(finished[divisor-1][0], color = str(hue)), Indicate(finished[divisor-1][-1], color = str(hue)))
 
             if(i != 6):
-                self.play(arrow.animate.next_to(cyclo_examples[i+1], LEFT))
+                self.play(arrow.animate.next_to(cyclo_examples[i+1][0], LEFT))
             else:
                 self.play(FadeOut(arrow))
 
@@ -390,7 +403,7 @@ class Cyclo(Scene):
         eqBox = SurroundingRectangle(newEq, buff = 0.1)
         self.play(Create(eqBox))
 
-        self.next_section("2", skip_animations = False)
+        #self.next_section("2", skip_animations = False)
         #primes section
 
         self.subsection()
@@ -481,7 +494,7 @@ class Cyclo(Scene):
         # bufferRHS = mt(r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-1}")
         #
 
-        self.next_section("3", skip_animations=False)
+        #self.next_section("3", skip_animations=False)
 
         newFraction = mt(r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-1}")
         newFraction.next_to(equation[1], direction = RIGHT)
@@ -509,14 +522,45 @@ class Cyclo(Scene):
 
         self.play(Indicate(newFraction[0][:17]), Indicate(equation[0][0][:6]), Indicate(equation[0][0][16:]))
 
+        self.subsection()
+        self.titlecard("Why do I care?", mt(r"\Phi_q(b^h)"))
+
+        new_fact = MathTex(r"b&\geq2",r"m\geq 1",r"h\geq 1", r"\\ p", "=", r"b^{hm}", "+&", "b^{h(m-1)}", "+ ...+", "b^{h}", "+", "1")
+        #b^hm --> (b^h)^m
+        new_fact.to_edge(UP)
+
+        conc_from_fact = Tex(r"$m+1$ is prime, ", "$h$ is a power of $m+1$")
+
+        fact_arr = Arrow(UP, DOWN)
+        fact_arr.next_to(new_fact, DOWN)
+        new_fact.next_to(fact_arr, UP)
+        fact_arr.next_to(conc_from_fact, UP)
+
+        qm1 = mt(r"q-1")
+        qm2 = mt(r"q-2")
+
+        newEq = mt("p", "=", r"(b^h)^(q-1)", "+&", "(b^h)^(q-2)", "+ ...+", "b^{h}", "+", "1")
+
         self.wait(4)
 
     def the_result(self):
-        self.next_section("result 1", skip_animations=False)
+        #self.next_section("result 1", skip_animations=False)
 
         self.section()
         self.titlecard("The Central Result")
-        # ...
+
+        divis_test_17 = mt(r"17\mid 123743 \ =>\text{ not prime}")
+
+        divis_test = mt(r"P(x)\mid \Phi_q(x^h) \ =>\text{ not prime?}")
+        divis_test_diff = mt(r"P(x)\mid \Phi_q(x^h)")
+
+        divis_test_2 = mt(r"\Phi_{hq}(x)\mid \Phi_q(x^h)").next_to(divis_test_diff, DOWN)
+
+        self.play(Write(divis_test_17))
+        self.play(ReplacementTransform(divis_test_17, divis_test))
+        self.play(Transform(divis_test, divis_test_diff), Write(divis_test_2))
+
+
 
         self.subsection()
         self.titlecard("Divisibility", mt(r"\Phi_{hq}(x)\mid\Phi_q(x^h)"))
@@ -612,7 +656,7 @@ class Cyclo(Scene):
         highBox = SurroundingRectangle(divis, buff = 0.1)
         self.play(Create(highBox))
 
-        self.next_section("result 2", skip_animations=False)
+        #self.next_section("result 2", skip_animations=False)
         self.subsection()
         self.subsection()
         self.titlecard("Complex Magnitudes", mt(r"\|a+bi\|=\sqrt{a^2+b^2}"))
@@ -684,9 +728,6 @@ class Cyclo(Scene):
                   ReplacementTransform(eq2[:2], mag_q[:2]),
                   ReplacementTransform(eq1[2], mag_phi_hq[2:]),
                   ReplacementTransform(eq2[2], mag_q[2:]))
-
-        def rearrange(a, b):
-            return a.animate.scale_to_fit_height(b.height).move_to(b)
 
         self.play(ReplacementTransform(mag_phi_hq[:2], mag_phi_hq2[:2]),
                   ReplacementTransform(mag_q[:2], mag_q2[:2]),
@@ -946,13 +987,101 @@ class Cyclo(Scene):
 
         self.wait()
 
+    def last_section(self):
+        self.subsection()
+        self.titlecard("Wrapping Up", mt("h=q^t"))
+
+        poop_dimension = mt(r"\Phi_{hq}(x)", "=", r"\Phi_q(x^h)}}")
+        poop_arrows = mt(r"\nwarrow\ &\ \ \ \nearrow").next_to(poop_dimension, DOWN)
+        poop_arrows.shift(np.array((poop_dimension[1].get_x() - poop_arrows.get_x(), 0, 0)))
+        label = Tex(r"must have the same roots").next_to(poop_arrows, DOWN)
+
+        self.play(Write(poop_dimension))
+        self.play(Write(poop_arrows), Write(label))
+
+        line1 = mt(r"/")
+        line2 = mt(r"\backslash")
+        set1 = mt(r"\{", r"e^{2\pi i \frac{k}{hq}}", r"\mid \gcd(k,hq)=1\}")
+        set2 = mt(r"\{", r"e^{2\pi i \frac{k}{hq}}", r"\mid \gcd(k,q)=1\}")
+
+        line1.next_to(poop_dimension[0][0], DOWN)
+        line2.next_to(poop_dimension[2][0], DOWN)
+        set1.next_to(line1, DOWN)
+        set1.shift([line1.get_x()-set1[2][-1].get_x(), 0, 0])
+        set2.next_to(line2, DOWN)
+        set2.shift([line2.get_x() - set2[0][0].get_x(), 0, 0])
+
+        self.play(FadeOut(label), FadeOut(poop_arrows))
+        self.play(Write(line1), Write(line2), Write(set1), Write(set2), time = 0.1)
+        self.play(FadeOut(poop_dimension[0]), FadeOut(poop_dimension[2]), FadeOut(line1), FadeOut(line2),
+                  set1.animate.next_to(poop_dimension[1], LEFT), set2.animate.next_to(poop_dimension[1], RIGHT))
+
+        self.play(Indicate(set1[1][-4]), Indicate(set2[1][-4]))
+
+        kay1 = mt(r"\{", r"k", r"\mid \gcd(k,hq)=1\}")
+        kay2 = mt(r"\{", r"k", r"\mid \gcd(k,q)=1\}")
+        kay1.next_to(poop_dimension[1], LEFT)
+        kay2.next_to(poop_dimension[1], RIGHT)
+
+        self.play(FadeOut(set1[1][:-4]), FadeOut(set1[1][-3:]),
+                  FadeOut(set2[1][:-4]), FadeOut(set2[1][-3:]),
+                  rearrange(set1[1][-4], kay1[1]),
+                  rearrange(set2[1][-4], kay2[1]),
+                  rearrange(set1[0], kay1[0]),
+                  rearrange(set2[0], kay2[0]),
+                  rearrange(set1[2], kay1[2]),
+                  rearrange(set2[2], kay2[2]))
+
+        equation = VGroup(set1[0], set1[1][-4], set1[2], poop_dimension[1], set2[0], set2[1][-4], set2[2])
+
+        supposition = mt(r"\text{If there is prime } r\neq q \text{ where } r\mid h:").to_edge(UP)
+
+        self.play(Write(supposition))
+
+        gcd1 = mt(r"\gcd(r, hq)=r").next_to(supposition, DOWN)
+        gcd1.shift(gcd1.get_edge_center(RIGHT)[0]*LEFT)
+        gcd2 = mt(r", \ \gcd(r, q)=1").next_to(supposition, DOWN)
+        gcd2.shift(gcd2.get_edge_center(LEFT)[0]*LEFT)
+
+        self.play(Write(gcd1))
+        self.play(Write(gcd2))
+
+        neq = mt(r"\neq").move_to(poop_dimension[1])
+
+        self.play(Write(neq))
+        self.play(AnimationGroup(Unwrite(neq), Unwrite(gcd2), Unwrite(gcd1), lag_ratio=0.2))
+
+        strike = Line((supposition.get_edge_center(LEFT)[0]-0.3,supposition.get_edge_center(LEFT)[1],0), (supposition.get_edge_center(RIGHT)[0]+0.3,supposition.get_edge_center(RIGHT)[1],0))
+
+        self.play(Create(strike))
+        self.play(FadeOut(strike), FadeOut(supposition),
+                  equation.animate.shift(UP))
+
+        arr = mt(r"\downarrow").next_to(poop_dimension[1], DOWN)
+        text_meow = Tex(r"The only prime divisor of $h$ is $q$").next_to(arr, DOWN)
+        text_meow2 = mt(r"h=q^k").next_to(arr, DOWN)
+
+        self.play(Write(arr))
+        self.play(Write(text_meow))
+
+        self.play(Transform(text_meow, text_meow2))
+
+        box = SurroundingRectangle(text_meow, buff=0.1)
+
+        self.play(Create(box))
+
+        #add conc.
+
+        self.wait(4)
+
 
 
     def construct(self):
         # play intro animation
-        # self.intro()
+        self.intro()
         # play definitions animation
-        # self.definitions()
+        self.definitions()
         # play section 6
         self.the_result()
         self.step_27()
+        self.last_section()
