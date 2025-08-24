@@ -44,7 +44,7 @@ pre_angle = 0
 #     print("buh")
 
 class Cyclo(Scene):
-    level = [0, 0]
+    level = [0, 0, 0]
 
     def hide_all(self, anim: Callable[[Mobject], Animation] = FadeOut):
         if len(self.mobjects) != 0:
@@ -56,13 +56,21 @@ class Cyclo(Scene):
     def section(self):
         self.level[0] += 1
         self.level[1] = 0
+        self.level[2] = 0
 
     def subsection(self):
         self.hide_all()
         self.level[1] += 1
 
+    def subsubsection(self):
+        self.hide_all()
+        self.level[2] += 1
+
     def titlecard(self, title: str, mob: Mobject | None = None):
-        subt = "" if self.level[1] == 0 else f".{self.level[1]}"
+        subt = (
+            "" if self.level[1] == 0 and self.level[2] == 0
+            else f".{self.level[1]}" if self.level[2] == 0
+            else f".{self.level[1]}.{self.level[2]}")
 
         text = Tex(f"{self.level[0]}{subt} " + title)
         text.to_edge(UP + LEFT)  # pyrefly: ignore
@@ -504,11 +512,12 @@ class Cyclo(Scene):
         self.wait(4)
 
     def the_result(self):
+        self.next_section("result 1", skip_animations=False)
 
         self.section()
         self.titlecard("The Central Result")
         # ...
-        
+
         self.subsection()
         self.titlecard("Divisibility", mt(r"\Phi_{hq}(x)\mid\Phi_q(x^h)"))
 
@@ -590,43 +599,114 @@ class Cyclo(Scene):
 
         self.play(FadeOut(lrarrow), FadeOut(multi), divis.animate.move_to(np.array((0,0,0))), FadeOut(zeq))
 
+        Q_mult = mt(r"Q(x)\cdot\Phi_{hq}(x)=\Phi_q(x^h)")
+        where_q = mt(r"\text{where } Q(x)=\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k \leq hq }} \left(x-e^{2\pi i \frac{k}{hq} }\right) ").next_to(Q_mult, DOWN)
+        arrow = mt(r"\nearrow").next_to(where_q, DOWN)
+        might_be = Tex(r"might be empty")
+        arrow.shift([where_q[0][9].get_x()-arrow[0][0].get_x(), 0, 0])
+        might_be.next_to(arrow, LEFT)
+        might_be.shift(DOWN*0.5)
+
+        self.play(Transform(divis, Q_mult), Write(where_q), Write(arrow), Write(might_be))
         
         highBox = SurroundingRectangle(divis, buff = 0.1)
         self.play(Create(highBox))
 
+        self.next_section("result 2", skip_animations=False)
         self.subsection()
         self.subsection()
         self.titlecard("Complex Magnitudes", mt(r"\|a+bi\|=\sqrt{a^2+b^2}"))
 
-
-        monic_polys = mt(r"Q(x)\cdot", r"\Phi_{hq}(x)", "&=", r"\Phi_q(x^h)")
+        monic_polys = mt(r"Q(x)", r"\cdot", r"\Phi_{hq}(x)", "=", r"\Phi_q(x^h)")
         arrows = mt(r"\nwarrow\ &\ \ \ \nearrow").next_to(monic_polys, DOWN)
-        arrows.shift(np.array((monic_polys[2].get_x() - arrows.get_x(), 0, 0)))
+        arrows.shift(np.array((monic_polys[3].get_x() - arrows.get_x(), 0, 0)))
         label = Tex(r"monic integer polynomials").next_to(arrows, DOWN)
 
         self.play(Write(monic_polys))
         self.wait()
         self.play(Write(arrows), FadeIn(label))
-        self.wait()
+        self.play(Indicate(monic_polys[2]),Indicate(monic_polys[-1]))
+        self.play(Indicate(monic_polys[0]))
         self.play(FadeOut(arrows), FadeOut(label))
 
-        monic_polys_b = mt(r"Q(b)\cdot", r"\Phi_{hq}(b)", "&=", r"\Phi_q(b^h)")
+        new_exp = mt(r"Q(b)", r"\cdot", r"\Phi_{hq}(b)", "=", r"\Phi_q(b^h)")
+
+        self.play(ReplacementTransform(monic_polys[0][:2], new_exp[0][:2]),
+                  ReplacementTransform(monic_polys[0][2], new_exp[0][2]),
+                  ReplacementTransform(monic_polys[0][3], new_exp[0][3]),
+                  ReplacementTransform(monic_polys[1], new_exp[1]),
+                  ReplacementTransform(monic_polys[2][:4], new_exp[2][:4]),
+                  ReplacementTransform(monic_polys[2][4], new_exp[2][4]),
+                  ReplacementTransform(monic_polys[2][5], new_exp[2][5]),
+                  ReplacementTransform(monic_polys[3:], new_exp[3:]))
+
         eq_b = mt("= p")
-        eq_b.shift(np.array((monic_polys_b[2].get_x() - eq_b.get_x(), 0, 0)))
+        eq_b.next_to(monic_polys, RIGHT)
+        eq_b.shift([0, monic_polys[3].get_y()-eq_b[0][0].get_y(), 0])
+        self.play(Write(eq_b))
+        self.play(FadeOut(new_exp[-1]), FadeOut(new_exp[-2]), eq_b.animate.shift([monic_polys[3].get_x()-eq_b[0][0].get_x(), 0, 0]))
 
-        self.hide_all()
+        monic_polys_b1 = mt(r"|Q(b)|", r"\cdot", r"|\Phi_{hq}(b)|")
+        monic_polys_b1.next_to(eq_b[0][0], direction = LEFT)
 
-        mag_phi_hq = mt(r"\left|\Phi_hq(b)\right| = \left\| \prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq)=1}} \left(b-e^{2\pi i \frac{k}{hq}}\right) \right\|")
-        mag_phi_hq_2 = mt(r"\left|\Phi_hq(b)\right| = \left\| \prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq)=1}} \left(b-e^{2\pi i \frac{k}{hq}}\right) \right\|")
+        self.play(new_exp[0].animate.move_to(monic_polys_b1[0]), new_exp[1].animate.move_to(monic_polys_b1[1]), new_exp[2].animate.move_to(monic_polys_b1[2]))
+        self.play(Write(monic_polys_b1[i][j]) for i,j in zip([0,2,2,0], [0,-1,0,-1]))
 
-        self.play(Write(mag_phi_hq))
-        self.play(ReplacementTransform(mag_phi_hq, mag_phi_hq_2))
+        eq1 = mt(r"|\Phi_{hq}(b)|=1")
+        orz = Tex("or")
+        eq2 = mt(r"|Q(b)| = 1")
+
+        eq1.next_to(monic_polys[1], DOWN)
+        eq1.shift(DOWN)
+        orz.next_to(eq1, DOWN)
+        eq2.next_to(orz, DOWN)
+        eq2.shift([eq1[0][-2].get_x()-eq2[0][-2].get_x(), 0, 0])
+
+        self.play(AnimationGroup(Write(eq1), Write(orz), Write(eq2), lag_ratio = 0.2))
+
+        new_eq = VGroup(monic_polys_b1[0][0], monic_polys_b1[0][-1], monic_polys_b1[2][0], monic_polys_b1[2][-1], new_exp[0:3], eq_b)
+        self.play(FadeOut(orz), new_eq.animate.to_edge(UP))
+
+        self.play(eq1.animate.shift(3*UP), eq2.animate.shift(UP))
+
+        mag_phi_hq = mt(r"{{|\Phi_{hq}(b)|}} {{=}} {{\left\|}} {{\prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq)=1} } }} {{\left(b-e^{2\pi i \frac{k}{hq} }\right)}} {{\right\|}}")
+        mag_phi_hq2 = mt(r"{{|\Phi_{hq}(b)|}} {{=}} {{\prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq)=1} } }} {{\left\|}} {{b-e^{2\pi i \frac{k}{hq} } }} {{\right\|}}")
+        mag_phi_hq.shift(np.array(eq1[0][-2].get_center().tolist())-np.array(mag_phi_hq[0][1].get_center().tolist()))
+        mag_phi_hq2.shift(np.array(eq1[0][-2].get_center().tolist())-np.array(mag_phi_hq2[0][1].get_center().tolist()))
+
+        mag_q  = mt(r"{{|Q(b)|}} {{=}} {{\left\|}} {{\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k \leq hq } } }} {{\left(b-e^{2\pi i \frac{k}{hq} }\right)}} {{\right\|}}").next_to(mag_phi_hq, DOWN)
+        mag_q2 = mt(r"{{\left|Q(b)\right|}} {{=}} {{\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k \leq hq } } }} {{\left\|}} {{b-e^{2\pi i \frac{k}{hq} } }} {{\right\|}}").next_to(mag_phi_hq, DOWN)
+        mag_q.shift(np.array(eq2[0][-2].get_center().tolist()) - np.array(mag_q[0][1].get_center().tolist()))
+        mag_q2.shift(np.array(eq2[0][-2].get_center().tolist()) - np.array(mag_q2[0][1].get_center().tolist()))
+
+        self.play(ReplacementTransform(eq1[:2], mag_phi_hq[:2]),
+                  ReplacementTransform(eq2[:7], mag_q[:7]),
+                  ReplacementTransform(eq1[7:], mag_phi_hq[7:]),
+                  ReplacementTransform(eq2[9:], mag_q[9:]))
+
+        def rearrange(a, b):
+            return a.animate.scale_to_fit_height(b.height).move_to(b)
+
+        self.play(rearrange(mag_phi_hq[9], mag_phi_hq2[26]),
+                  rearrange(mag_q[0], mag_q2[27]),)
+
+        #self.play(Write(mag_phi_hq), Write(mag_q))
+        #self.play(ReplacementTransform(mag_phi_hq, mag_phi_hq_2), ReplacementTransform(mag_q, mag_q2))
+
+        #surr1 = SurroundingRectangle(mag_phi_hq[1], buff=0.2)
+        #surr2 = SurroundingRectangle(mag_q[1], buff=0.2)
+
+        #self.play(Create(surr1), Create(surr2))
+        #self.play(FadeOut(surr1), FadeOut(surr2))
 
         self.wait()
-        
-        self.hide_all()
 
-        plane = ComplexPlane().add_coordinates().scale(8/3)
+        # self.next_section("result 3", skip_animations=True) #TODO REMOVE LATER
+
+        self.subsubsection()
+        self.titlecard("", mt(r"\left\|b-e^{2\pi i\frac{k}{hq}}\right\|"))
+
+        plane = ComplexPlane().add_coordinates().scale(7/3).shift([0,0.5,0])
 
 
         moving_point = Dot(plane.n2p(1+0j), color=ORANGE)
@@ -671,7 +751,7 @@ class Cyclo(Scene):
                 stroke_width = 1
         )))
 
-        value_label = mt(rf"e^{{i {np.around(k.get_value(), 2)} }}", font_size = 35, color = ORANGE).next_to(moving_point, UP, buff = 0.1).add_updater(
+        value_label = mt(r"e^{i\theta}", font_size = 35, color = ORANGE).next_to(moving_point, UP, buff = 0.1).add_updater(
             lambda m: m.become (mt(rf"e^{{i {np.around(k.get_value(), 2)} }}", font_size = 35, color = ORANGE).next_to(moving_point, UP, buff = 0.1))
         )
 
@@ -691,16 +771,45 @@ class Cyclo(Scene):
         moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
         moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
 
-        self.add(plane, inner_radius, outer_line, length_label, circle, value_label, b_label, b_point, moving_point)
-
+        self.play(Create(plane), Create(circle))
+        self.play(Create(moving_point))
+        self.play(Write(value_label))
+        self.play(Write(b_label), Create(b_point))
+        self.play(FadeIn(inner_radius), FadeIn(outer_line))
+        self.play(Write(length_label))
 
         self.play(ChangeSpeed(k.animate.set_value(2*PI), speedinfo={0: 0.125}))
+
+    def step_27(self):
+        # Step 27
+        self.hide_all()
+
+        a27 = mt(r"|Q(b)|", r"\times", r"|\Phi_{hq}(b)| = p").shift(UP)
+        a27.to_edge(UP)
+        b27 = mt(r"\prod_{\substack{1 \leq k \leq hq \\ \gcd(k, hq) = 1}} || b-e^{i2\pi \frac{k}{hq}} || = |\Phi_{hq} (b)|")
+        b27.next_to(a27, DOWN)
+        b27.shift(DOWN)
+        c27 = mt(r"\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k \leq hq}} || b-e^{i2\pi \frac{k}{hq}} || = |Q(b)|")
+
+        c27.next_to(b27, DOWN)
+        c27.shift(DOWN)
+
+        self.play(Write(a27), Write(b27), Write(c27))
         self.wait()
+        # Step 28
+
+        d27 = mt(r"1 <")
+        d27.next_to(b27, LEFT)
+        self.play(Write(d27))
+
+        self.wait()
+
 
     def construct(self):
         # play intro animation
         # self.intro()
         # play definitions animation
-        self.definitions()
+        # self.definitions()
         # play section 6
-        #self.the_result()
+        # self.the_result()
+        self.step_27()
