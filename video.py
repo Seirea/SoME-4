@@ -1115,17 +1115,50 @@ class Cyclo(Scene):
         self.play(Write(prep_2))
         self.play(Write(arr2))
         self.play(Write(conc))
-        
+
         self.wait(4)
 
     def epilogue(self):
-        pass
+        self.section()
+        self.titlecard("Epilogue")
+
+        supposition = mt(r"\text{If there is prime } r \nmid a \text{ where } r\mid h:").to_edge(UP)
+
+        self.play(Write(supposition))
+        gcd1 = mt(r"\gcd(r, ha)=r, \gcd(r, a) = 1").next_to(supposition, DOWN).shift(DOWN)
+        self.play(Write(gcd1))
+
+        kay1 = mt(r"\{", r"k", r"\mid \gcd(k,ha)=1\}", r"\neq", r"\{", r"k", r"\mid \gcd(k,a)=1\}").next_to(gcd1, DOWN).shift(DOWN)
+        eqs = mt(r"=")
+        eqs.move_to(kay1[3])
+        self.play(Write(kay1))
+        self.add(eqs)
+        self.play(Unwrite(kay1[3]), Unwrite(gcd1))
+
+        strike = Line((supposition.get_edge_center(LEFT)[0]-0.3,supposition.get_edge_center(LEFT)[1],0), (supposition.get_edge_center(RIGHT)[0]+0.3,supposition.get_edge_center(RIGHT)[1],0))
+
+        self.play(Create(strike))
+        self.wait()
+        self.play(FadeOut(strike), FadeOut(supposition), kay1.animate.shift(UP), eqs.animate.shift(UP))
+
+        down_arrow = Arrow().rotate(-PI/2).next_to(eqs, DOWN)
+        statement = Tex("All prime divisors of h are divisors of a").next_to(down_arrow, DOWN)
+
+        self.play(Write(down_arrow))
+        self.play(Write(statement))
+
+        bounding_box = SurroundingRectangle(statement)
+        self.play(Write(bounding_box))
+
+        self.wait()
+
     def construct(self):
         # play intro animation
-        #self.intro()
+        # self.intro()
         # play definitions animation
         self.definitions()
         # play section 6
-        #self.the_result()
-        #self.step_27()
-        #self.last_section()
+        self.the_result()
+        self.step_27()
+        self.last_section()
+        self.epilogue()
