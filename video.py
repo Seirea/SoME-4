@@ -245,7 +245,7 @@ class Cyclo(Scene):
         for l, eq, r in zip(lhs, equals_signs, rhs):
             eq.next_to(l, RIGHT, buff=0.1)
             r.next_to(eq, RIGHT, buff=0.1)
-            r.shift([0, l[0].get_y()-r[1].get_y(), 0])
+            r.shift([0, l[0][0].get_y()-r[0][1].get_y(), 0])
 
         equations = VGroup(VGroup(l, eq, r) for l, eq, r in zip(lhs, equals_signs, rhs))
         equations.move_to((0,0,0))
@@ -272,7 +272,7 @@ class Cyclo(Scene):
                 self.play(Indicate(finished[divisor-1][0], color = str(hue)), Indicate(finished[divisor-1][-1], color = str(hue)))
 
             if(i != 6):
-                self.play(arrow.animate.next_to(cyclo_examples[i+1][0], LEFT))
+                self.play(arrow.animate.next_to(cyclo_examples[i+1][0][0], LEFT))
             else:
                 self.play(FadeOut(arrow))
 
@@ -473,7 +473,7 @@ class Cyclo(Scene):
         self.play(Transform(equation[2], geo_form))
         self.play(equation.animate.shift([-equation[1].get_x(), -equation[1].get_y(), -equation[1].get_z()]))
 
-        phi_p = mt(r"\prod_{\substack{0 \le k \le p\\gcd(k,p) = 1}} \left(x - e^{2\pi i \frac{k}{p}} \right)")
+        phi_p = mt(r"\prod_{\substack{0 \le k < p\\gcd(k,p) = 1}} \left(x - e^{2\pi i \frac{k}{p}} \right)")
         phi_p.next_to(equation[1], direction = LEFT)
         self.play(Transform(equation[0], phi_p))
 
@@ -496,7 +496,7 @@ class Cyclo(Scene):
 
         #self.next_section("3", skip_animations=False)
 
-        newFraction = mt(r"\frac{\prod_{\substack{0 \le k \le p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-1}")
+        newFraction = mt(r"\frac{\prod_{\substack{0 \le k < p}} \left(x - e^{2\pi i \frac{k}{p}} \right)}{x-1}")
         newFraction.next_to(equation[1], direction = RIGHT)
         self.play(ReplacementTransform(equation[2][0][4], newFraction[0][17]), ReplacementTransform(equation[2][0][:4], newFraction[0][:17]), ReplacementTransform(equation[2][0][5:], newFraction[0][18:]))
 
@@ -525,21 +525,55 @@ class Cyclo(Scene):
         self.subsection()
         self.titlecard("Why do I care?", mt(r"\Phi_q(b^h)"))
 
-        new_fact = MathTex(r"b&\geq2",r"m\geq 1",r"h\geq 1", r"\\ p", "=", r"b^{hm}", "+&", "b^{h(m-1)}", "+ ...+", "b^{h}", "+", "1")
+        new_fact = MathTex(r"b&\geq2, ",r"m\geq 1,",r"h\geq 1", r"\\ p", "=", r"b^{hm}", "+&", "b^{h(m-1)}", "+ ...+", "b^{h}", "+", "1")
         #b^hm --> (b^h)^m
         new_fact.to_edge(UP)
 
-        conc_from_fact = Tex(r"$m+1$ is prime, ", "$h$ is a power of $m+1$")
+        conc_from_fact = Tex(r"$m+1$", " is prime, ", "$h$ is a power of $m+1$")
 
         fact_arr = Arrow(UP, DOWN)
         fact_arr.next_to(new_fact, DOWN)
         new_fact.next_to(fact_arr, UP)
         fact_arr.next_to(conc_from_fact, UP)
 
-        qm1 = mt(r"q-1")
-        qm2 = mt(r"q-2")
+        self.play(Write(new_fact), Write(conc_from_fact), Write(fact_arr))
 
-        newEq = mt("p", "=", r"(b^h)^(q-1)", "+&", "(b^h)^(q-2)", "+ ...+", "b^{h}", "+", "1")
+        eqq = mt("=q,").next_to(conc_from_fact[0], RIGHT)
+        eqq.shift((conc_from_fact[0][0].get_y()-eqq[0][0].get_y())*UP)
+
+        shiftVal = [new_fact[1].get_edge_center(LEFT)[0]-new_fact[2].get_edge_center(LEFT)[0], 0, 0]
+
+        self.play(Transform(conc_from_fact[1], eqq), conc_from_fact[2].animate.next_to(eqq, RIGHT))
+        self.play(FadeOut(conc_from_fact[0]), FadeOut(conc_from_fact[1]), FadeOut(new_fact[1]),
+                  conc_from_fact[2].animate.shift([conc_from_fact.get_x()-conc_from_fact[2].get_x(), 0, 0]),
+                  new_fact[2:].animate.shift(shiftVal))
+
+        newEq = mt("=", r"(b^h)^{q-1}", "+", "(b^h)^{q-2}", "+ ...+", "b^{h}", "+", "1")
+        newEq.shift(new_fact[4].get_center() - newEq[0].get_center())
+
+        shiftVal = [newEq[4].get_x() - new_fact[8].get_x(), 0, 0]
+
+        self.play(rearrange(new_fact[5][:2], newEq[1][1:3]),
+                  rearrange(new_fact[6], newEq[2]),
+                  rearrange(new_fact[7][:2], newEq[3][1:3]),
+                  rearrange(new_fact[5][2], newEq[1][4:]),
+                  rearrange(new_fact[7][2:], newEq[3][4:]),
+                  new_fact[8:].animate.shift(shiftVal),
+                  Transform(new_fact[5][2], newEq[1][4:]),
+                  Transform(new_fact[7][2:], newEq[3][4:]),
+                  Write(newEq[1][0]), Write(newEq[1][3]),
+                  Write(newEq[3][0]), Write(newEq[3][3]))
+
+        rhs = VGroup(new_fact[5:], newEq[1][0], newEq[1][3], newEq[3][0], newEq[3][3])
+        newRHS = mt(r"\Phi_q(b^h)")
+        newEq = mt("=")
+        newP = mt("p")
+        newEq.move_to([0,0,0]).set_y(new_fact[3].get_y())
+        newP.next_to(newEq, LEFT)
+        newRHS.next_to(newEq, RIGHT)
+
+
+        self.play(ReplacementTransform(rhs, newRHS), new_fact[4].animate.set_x(0), new_fact[3].animate.set_x(newP.get_x()))
 
         self.wait(4)
 
@@ -1070,18 +1104,28 @@ class Cyclo(Scene):
 
         self.play(Create(box))
 
-        #add conc.
+        self.hide_all()
 
+        prep_1 = Tex(r"if $b \geq 2$ and $h\geq 1$,")
+        prep_2 = mt(r"\Phi_q(b^h)=p").next_to(prep_1, DOWN)
+        arr2 = mt(r"\downarrow").next_to(prep_2, DOWN)
+        conc = mt(r"h=q^k").next_to(arr2, DOWN)
+
+        self.play(Write(prep_1))
+        self.play(Write(prep_2))
+        self.play(Write(arr2))
+        self.play(Write(conc))
+        
         self.wait(4)
 
-
-
+    def epilogue(self):
+        pass
     def construct(self):
         # play intro animation
-        self.intro()
+        #self.intro()
         # play definitions animation
         self.definitions()
         # play section 6
-        self.the_result()
-        self.step_27()
-        self.last_section()
+        #self.the_result()
+        #self.step_27()
+        #self.last_section()
