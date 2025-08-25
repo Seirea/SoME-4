@@ -207,11 +207,11 @@ class Cyclo(Scene):
         ]
         self.play(*[Create(x) for x in base_b_braces])
 
-        # not sure about this one
+        self.hide_all()
 
         line_1 = mt(r"\underbrace{10001}00&0\underbrace{10001}{}_b\nonumber\\")
         arr = mt(r"\downarrow").next_to(line_1, DOWN)
-        line_2 = mt(r"10001{}_b&|1000100010001{}_b\nonumber").next_to(line_1, DOWN)
+        line_2 = mt(r"10001{}_b&|1000100010001{}_b\nonumber").next_to(arr, DOWN)
 
         self.play(Write(line_1))
         self.play(Write(arr))
@@ -583,9 +583,9 @@ class Cyclo(Scene):
         self.section()
         self.titlecard("The Central Result")
 
-        divis_test_17 = mt(r"17\mid 123743 \ =>\text{ not prime}")
+        divis_test_17 = mt(r"17\mid 123743 \rightarrow \text{ not prime}")
 
-        divis_test = mt(r"P(x)\mid \Phi_q(x^h) \ =>\text{ not prime?}")
+        divis_test = mt(r"P(x)\mid \Phi_q(x^h) \rightarrow \text{ not prime?}")
         divis_test_diff = mt(r"P(x)\mid \Phi_q(x^h)")
 
         divis_test_2 = mt(r"\Phi_{hq}(x)\mid \Phi_q(x^h)").next_to(divis_test_diff, DOWN)
@@ -1154,7 +1154,7 @@ class Cyclo(Scene):
 
     def construct(self):
         # play intro animation
-        # self.intro()
+        self.intro()
         # play definitions animation
         self.definitions()
         # play section 6
