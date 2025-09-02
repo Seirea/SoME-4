@@ -56,33 +56,6 @@ class ColoredMathTex(manim.MathTex):
         for var, key in d.items():
             self.set_color_by_tex(var, key)
 
-# Absolute-timing helpers
-def _parse_stamp(stamp: str) -> float:
-    # 'HH:MM:SS.mmm' -> seconds (float)
-    h, m, s = stamp.split(':')
-    return int(h) * 3600 + int(m) * 60 + float(s)
-
-def sync_start(self, stamp='00:00:00.000'):
-    # Initialize absolute timeline
-    self._abs_t = _parse_stamp(stamp)
-
-def wait_to(self, stamp: str):
-    # Pad the timeline so that the next frame lands at "stamp"
-    target = _parse_stamp(stamp)
-    now = getattr(self, '_abs_t', 0.0)
-    dt = max(0.0, target - now)
-    if dt > 0:
-        self.wait(dt)
-    self._abs_t = target
-
-def play_to(self, stamp: str, *anims, **kwargs):
-    # This animation ends exactly at "stamp" (stretches or compresses to fit)
-    target = _parse_stamp(stamp)
-    now = getattr(self, '_abs_t', 0.0)
-    rt = max(0.02, target - now)
-    kwargs.setdefault('run_time', rt)
-    self.play(*anims, **kwargs)
-    self._abs_t = target
 
 # def auto_color(mob: MathTex):
 #     vars: dict[str, ManimColor] = {
@@ -150,35 +123,7 @@ def indexAlign(a, b, indexA, indexB):
     return b[indexB[0]][indexB[1]].get_center() - a[indexA[0]][indexA[1]].get_center()
 
 class Cyclo(Scene):
-    level = [2, 0, 0]
-
-    # Absolute-timing helpers
-    def _parse_stamp(stamp: str) -> float:
-        # 'HH:MM:SS.mmm' -> seconds (float)
-        h, m, s = stamp.split(':')
-        return int(h) * 3600 + int(m) * 60 + float(s)
-
-    def sync_start(self, stamp='00:00:00.000'):
-        # Initialize absolute timeline
-        self._abs_t = _parse_stamp(stamp)
-
-    def wait_to(self, stamp: str, num_anims = 1):
-        # Pad the timeline so that the next frame lands at "stamp"
-        target = _parse_stamp(stamp)
-        now = getattr(self, '_abs_t', 0.0)
-        dt = max(0, target - now - num_anims)
-        if dt > 0:
-            self.wait(dt)
-        self._abs_t = target
-
-    def play_to(self, stamp: str, *anims, **kwargs):
-        # This animation ends exactly at "stamp" (stretches or compresses to fit)
-        target = _parse_stamp(stamp)
-        now = getattr(self, '_abs_t', 0.0)
-        rt = max(0.02, target - now)
-        kwargs.setdefault('run_time', rt)
-        self.play(*anims, **kwargs)
-        self._abs_t = target
+    level = [0, 0, 0]
 
     def hide_all(self, anim: Callable[[Mobject], Animation] = FadeOut):
         if self.mobjects is not None and len(self.mobjects) != 0:
@@ -231,58 +176,51 @@ class Cyclo(Scene):
         return divs
 
     def intro(self):
-        self.sync_start('00:00:00.000')
-
-        self.wait_to('00:00:02.620', num_anims = 2)
-
         self.section()
         titlecard = mt(r"2^{2^\alpha} + 1")
         titlecard[0][2].set_color(accents[1])
         self.titlecard("Something Familiar", titlecard)
 
         fermat_full = MathTex(r"p = 2^h + 1")
+        # CUE
         fermat_full[0][3].set_color(accents[0])
         fermat_full.save_state()
-
-        self.wait_to('00:00:06.710', num_anims = 2)
-        self.play(Write(fermat_full), run_time = 2)
+        self.play(Write(fermat_full))
 
         fermat = MathTex(r"p = 2^{2^\alpha} + 1")
+        # CUE
         fermat[0][4].set_color(accents[1])
         fermat.set_x(fermat_full[0][1].get_x()-fermat[0][1].get_x())
-
-        self.wait_to('00:00:18.366', num_anims = 6)
-        self.play(Transform(fermat_full[0][3], fermat[0][3:5]), fermat_full[0][-2].animate.move_to(fermat[0][-2]), fermat_full[0][-1].animate.move_to(fermat[0][-1]), run_time = 2)
+        self.play(Transform(fermat_full[0][3], fermat[0][3:5]), fermat_full[0][-2].animate.move_to(fermat[0][-2]), fermat_full[0][-1].animate.move_to(fermat[0][-1]))
 
         down_arr = MathTex(r"\downarrow")
         down_arr.next_to(fermat, DOWN)
 
         fermat_examples = Text("e.g. 3, 5, 17", font_size=15)
         fermat_examples.next_to(down_arr, DOWN)
-        self.play(Write(fermat_examples), FadeIn(down_arr), run_time = 2)
-        self.play(FadeOut(fermat_examples), FadeOut(down_arr), run_time = 2)
+        self.play(Write(fermat_examples), FadeIn(down_arr))
+        self.play(FadeOut(fermat_examples), FadeOut(down_arr))
 
+        # CUE
         self.play(FadeOut(fermat_full))
-        self.sync_start('00:00:21')
 
         proof_line_1 = MathTex(r"h = rw\text{, }w\text{ is odd}")
         proof_line_1[0][0].set_color(accents[0])
         proof_line_1[0][2].set_color(accents[2])
         proof_line_1[0][3].set_color(accents[3])
         proof_line_1[0][5].set_color(accents[3])
-        self.wait_to('00:00:26', num_anims = 2*3)
-        self.play(Write(proof_line_1), run_time = 2)
+        self.play(Write(proof_line_1))
         downarrow = MathTex(r"\downarrow", font_size = 90)
         proof_line_2 = MathTex(r"2^{r}+1\equiv 0 \mod{2^{r}+1}")
         proof_line_2[0][1].set_color(accents[2])
         proof_line_2[0][-3].set_color(accents[2])
 
-        self.play(proof_line_1.animate.shift(2*UP), run_time = 2)
+        self.play(proof_line_1.animate.shift(2*UP))
         #proof_req.animate.shift(3*UP),
 
         downarrow.move_to([0,0.6,0])
         proof_line_2.move_to([0,-0.8,0])
-        self.play(Write(downarrow), Write(proof_line_2), run_time = 2)
+        self.play(Write(downarrow), Write(proof_line_2))
         proof_line_3 = MathTex(r"2^{r}\equiv -1 \mod{2^{r}+1}")
         proof_line_3.shift(indexAlign(proof_line_3, proof_line_2, [0, 2], [0, 4]))
         #self.play(Write(proof_line_3))
@@ -297,39 +235,29 @@ class Cyclo(Scene):
         proof_line_7 = MathTex(r"2^{r}+1 \mid 2^{r w} + 1")
         proof_line_7.shift(indexAlign(proof_line_7, proof_line_6, [0, 4], [0, 5]))
 
-        self.wait_to('00:00:39.146', num_anims=6*2)
-        self.play(*rearrangeWhole(proof_line_2, proof_line_3, [0, 1, -3, 4, 2, "f", 5, 6, 7, 8, 9, 10, 11]), run_time = 1)
-        self.wait(1)
-        self.play(*rearrangeWhole(proof_line_2, proof_line_4, [0, 1, 5, 6, 3, "n", 9, 10, 11, 12, 13, 14, 15]), *[Write(proof_line_4[0][i]) for i in [2, 4, 7, 8]], run_time = 1)
-        self.wait(1)
-        self.play(*rearrangeWhole(proof_line_2, proof_line_5, [0, 1, 4, 5, 3, "n", 6, 7, 8, 9, 10, 11, 12]), *[FadeOut(proof_line_4[0][i]) for i in [4, 7, 8]], run_time = 1)
-        self.wait(1)
-        self.play(*rearrangeWhole(proof_line_2, proof_line_6, [0, 1, -3, 4, 5, "i", 7, 8, 9, 10, 11, 12, 13]), proof_line_4[0][2].animate.move_to(proof_line_6[0][2]), run_time = 1)
-        self.wait(1)
-        self.play(*rearrangeWhole(proof_line_2, proof_line_7, [5, 6, 8, 9, -4, "f", "f", "f", "f", 0, 1, 2, 3]), proof_line_4[0][2].animate.move_to(proof_line_7[0][-3]), run_time = 1)
-        self.wait(1)
+        self.play(*rearrangeWhole(proof_line_2, proof_line_3, [0, 1, -3, 4, 2, "f", 5, 6, 7, 8, 9, 10, 11]))
+        self.play(*rearrangeWhole(proof_line_2, proof_line_4, [0, 1, 5, 6, 3, "n", 9, 10, 11, 12, 13, 14, 15]), *[Write(proof_line_4[0][i]) for i in [2, 4, 7, 8]])
+        self.play(*rearrangeWhole(proof_line_2, proof_line_5, [0, 1, 4, 5, 3, "n", 6, 7, 8, 9, 10, 11, 12]), *[FadeOut(proof_line_4[0][i]) for i in [4, 7, 8]])
+        self.play(*rearrangeWhole(proof_line_2, proof_line_6, [0, 1, -3, 4, 5, "i", 7, 8, 9, 10, 11, 12, 13]), proof_line_4[0][2].animate.move_to(proof_line_6[0][2]))
+        self.play(*rearrangeWhole(proof_line_2, proof_line_7, [5, 6, 8, 9, -4, "f", "f", "f", "f", 0, 1, 2, 3]), proof_line_4[0][2].animate.move_to(proof_line_7[0][-3]))
 
         statement = VGroup(proof_line_2[0][:5], proof_line_2[0][-4:], proof_line_4[0][2])
-        self.play(statement.animate.shift([-statement[0][4].get_x(), 0, 0]), run_time = 2)
+        self.play(statement.animate.shift([-statement[0][4].get_x(), 0, 0]))
 
         equals = mt("=").move_to(proof_line_2[0][4])
-        self.wait_to('00:00:50.315', num_anims=1*2)
-        self.play(ReplacementTransform(proof_line_2[0][4], equals), run_time = 2)
-
+        self.play(ReplacementTransform(proof_line_2[0][4], equals))
 
         newEq = mt("w=1").next_to(equals, DOWN)
         newEq[0][0].set_color(accents[3])
         newEq.shift([-newEq[0][1].get_x(), 0, 0])
-        self.wait_to('00:00:52.213', num_anims=1*2)
-        self.play(Write(newEq), run_time = 2)
+        self.play(Write(newEq))
 
         final = mt(r"h=2^\alpha").next_to(newEq, DOWN)
         final[0][0].set_color(accents[0])
         final[0][-1].set_color(accents[1])
         final.shift([-final[0][1].get_x(), 0, 0]).shift(DOWN)
-        self.wait_to('00:01:10.000', num_anims=7)
-        self.play(Write(final), run_time = 2)
-        self.play(Indicate(final), run_time = 2)
+        self.play(Write(final))
+        self.play(Indicate(final))
 
         self.subsection()
 
@@ -355,37 +283,27 @@ class Cyclo(Scene):
         fact_arr.next_to(new_fact, DOWN)
         fact_arr.set_y(0.5*(new_fact.get_edge_center(DOWN)[1]+conc_from_fact.get_edge_center(UP)[1]))
 
-        self.wait_to('00:01:15.000', num_anims=1*2)
-        self.play(Write(new_fact), run_time = 2)
-
-        self.wait_to('00:01:30.000', num_anims=1*2)
-        self.play(Write(conc_from_fact), Write(fact_arr), run_time = 2)
+        self.play(Write(new_fact))
+        self.play(Write(conc_from_fact), Write(fact_arr))
 
         fact_highlight = SurroundingRectangle(new_fact[1], conc_from_fact, buff=.1)
+        self.play(Create(fact_highlight))
 
-        self.wait_to('00:01:35.000', num_anims=2)
-        self.play(Create(fact_highlight), run_time = 2)
+        self.hide_all()
 
         fermat_bin = MathTex("2^{h}+1 = 1", "00...01", "_{2}")
         fermat_bin[0][1].set_color(accents[0])
-
-        self.wait_to('00:01:45.000', num_anims=3)
-        self.hide_all()
-        self.play(Write(fermat_bin), run_time = 2)
+        self.play(Write(fermat_bin))
         bin_brace = BraceLabel(fermat_bin[1], "h")
         bin_brace[1].set_color(accents[0])
-
-        self.wait_to('00:01:53.000', num_anims=3)
-        self.play(Create(bin_brace), run_time = 2)
+        self.play(Create(bin_brace))
 
         self.hide_all()
 
         base_b_fact = MathTex(r"\left(b^{h}\right)^{m} + \left(b^{h}\right)^{m-1} + ... + b^{h} + 1 = 1", "00...01",
                               "00..01", "...", "00...01", "_{b}")
         setColor(base_b_fact, [[1, 7, -6, 2, 8, -5], [], [], [], [], [-1]], [[2, 2, 2, 0, 0, 0], [], [], [], [], [2]])
-
-        self.wait_to('00:01:57.000', num_anims=1*2)
-        self.play(Write(base_b_fact), run_time = 2)
+        self.play(Write(base_b_fact))
         base_b_braces = [
             BraceLabel(base_b_fact[1], "h"),
             BraceLabel(base_b_fact[2], "h"),
@@ -394,8 +312,9 @@ class Cyclo(Scene):
         for i in range(3):
             base_b_braces[i][1].set_color(accents[0])
 
-        self.wait_to('00:02:03.000', num_anims=2)
-        self.play(*[Create(x) for x in base_b_braces], run_time = 2)
+        self.play(*[Create(x) for x in base_b_braces])
+
+        self.hide_all()
 
         line_1 = mt(r"\underbrace{10001}00&0\underbrace{10001}{}_b\nonumber\\")
         arr = mt(r"\downarrow").next_to(line_1, DOWN)
@@ -404,14 +323,11 @@ class Cyclo(Scene):
         line_2[0][5].set_color(accents[2])
         line_2[0][-1].set_color(accents[2])
 
-        self.wait_to('00:02:19.000', num_anims=3)
-        self.hide_all()
-        self.play(Write(line_1), run_time = 2)
+        self.play(Write(line_1))
+        self.play(Write(arr))
+        self.play(Write(line_2))
 
-        self.wait_to('00:02:26.000', num_anims=1*2)
-        self.play(Write(arr), run_time = 2)
-        self.wait_to('00:02:32.000', num_anims=3)
-        self.play(Write(line_2), run_time = 2)
+        self.hide_all()
 
         new_fact = MathTex(r"\text{If }b\geq2&\text{, }q\text{ is prime:}", r"\\ &p = b^{h(q-1)} + b^{h(q-2)} + ...+ b^{h} + 1")
         setColor(new_fact, [[2, 6], [2, 10, 22, 3, 11, 23, 5, 13]], [[2, 1], [2, 2, 2, 0, 0, 0, 1, 1]])
@@ -425,36 +341,24 @@ class Cyclo(Scene):
         fact_arr.next_to(new_fact, DOWN)
         fact_arr.set_y(0.5 * (new_fact.get_edge_center(DOWN)[1] + conc_from_fact.get_edge_center(UP)[1]))
 
-        self.wait_to('00:02:42.000', num_anims=3)
-        self.hide_all()
-        self.play(Write(new_fact), run_time = 2)
-
-        self.wait_to('00:02:58.000', num_anims=3)
-        self.play(Write(conc_from_fact), Write(fact_arr), run_time = 2)
+        self.play(Write(new_fact))
+        self.play(Write(conc_from_fact), Write(fact_arr))
         self.hide_all()
 
         stick_figure = Tex("STICK FIGURE")  # i can make one for us :)
-
-        self.wait_to('00:03:04.000', num_anims=1*2)
-        self.play(Create(stick_figure), run_time = 2)
-
-        self.wait_to('00:03:14.000', num_anims=1*2)
-        self.play(FadeOut(stick_figure), run_time = 2)
+        self.play(Create(stick_figure))
+        self.play(FadeOut(stick_figure))
 
         cyclotomic_examples = MathTex(r"\Phi_1(x) &= x - 1 \\ \Phi_2(x) &= x + 1 \\ \Phi_3(x) &= x^2 + x + 1 \\ \Phi_4(x) &= x^2 + 1 \\ "
                                       r"\Phi_5(x) &= x^4 + x^3 + x^2 + x + 1 \\ \Phi_6(x) &= x^2 - x + 1 \\ \Phi_7(x) &= x^6 + x^5 + x^4 + x^3 + x^2 + x + 1 \\ \Phi_8(x) &= x^4 + 1 \\"
                                       r"\Phi_9(x) &= x^6 + x^3 + 1 \\ \Phi_{10}(x) &= x^4 - x^3 + x^2 - x + 1")
-
-        self.wait_to('00:03:18.000', num_anims=1*2)
-        self.play(Write(cyclotomic_examples), run_time = 2)
+        self.play(Write(cyclotomic_examples))
 
     def definitions(self):
         self.section()
         self.titlecard("Cyclotomic Polynomials", MathTex(r"\Phi_n(x)"))
 
-        #self.next_section("1", skip_animations = False)
-
-        self.sync_start('00:00:00')
+        self.next_section("1", skip_animations = False)
 
         cyclo_examples = [MathTex(r"x-1", r"=", r"(x-1)"), MathTex(r"x^2-1", r"=", r"(x-1)", r"(x+1)"), MathTex(r"x^3-1", r"=", r"(x-1)", r"(x^2+x+1)"), MathTex(r"x^4-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+1)"), MathTex(r"x^5-1", r"=", r"(x-1)", r"(x^4+x^3+x^2+x+1)"), MathTex(r"x^6-1", r"=", r"(x-1)", r"(x+1)", r"(x^2+x+1)", r"(x^2-x+1)"), MathTex(r"x^7-1", r"=", r"(x-1)", r"(x^6+x^5+x^4+x^3+x^2+x+1)")]
 
@@ -472,20 +376,15 @@ class Cyclo(Scene):
         equations = VGroup(VGroup(l, eq, r) for l, eq, r in zip(lhs, equals_signs, rhs))
         equations.move_to((0,0,0))
 
-        #self.wait_to('00:00:19.982', num_anims=3)
-
-        self.play(Write(equations), run_time = 3)
+        self.play(Write(equations))
 
         arrow = MathTex(r"\rightarrow")
         arrow.next_to(cyclo_examples[0][0], LEFT)
 
-        self.wait_to('00:00:17.3', num_anims = 4)
-
-        self.play(Write(arrow), run_time = 1)
+        self.play(Write(arrow))
 
         colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, PINK]
         finished = [[] for i in range(7)]
-
 
         for i in range(7):
             divisors = self.divisors(i+1)
@@ -503,15 +402,8 @@ class Cyclo(Scene):
             else:
                 self.play(FadeOut(arrow))
 
-        self.sync_start('00:00:30.8')
-
-        self.wait_to('00:00:35.9')
-
         self.play(*[Indicate(cyclo_examples[i][0], color = str(WHITE)) for i in range(7)])
-
-        self.wait_to('00:00:39')
-
-        self.play(equations.animate.scale(0.5).move_to((0, 0, 0)), run_time = 1)
+        self.play(equations.animate.scale(0.5).move_to((0, 0, 0)))
 
         factorizations = [MathTex(r"{{(x-1)}}"), MathTex(r"{{(x+1)}}{{(x-1)}}"), MathTex(r"{{(x-e^{2\pi i \frac{1}{3} })(x-e^{2\pi i \frac{2}{3} })}}{{(x-1)}}"),
                           MathTex(r"{{(x-e^{2\pi i \frac{1}{4} })(x-e^{2\pi i \frac{3}{4} })}}{{(x+1)}}{{(x-1)}}"), MathTex(r"{{(x-e^{2\pi i \frac{1}{5} })(x-e^{2\pi i \frac{2}{5} })(x-e^{2\pi i \frac{3}{5} })(x-e^{2\pi i \frac{4}{5} })}}{{(x-1)}}"),
@@ -523,14 +415,11 @@ class Cyclo(Scene):
         newLHS.scale(0.5)
         newLHS.move_to((-2.28, 0, 0))
 
-        self.play(*[VGroup(equals_signs[i], rhs[i]).animate.next_to(factorizations[i][-1][-1], RIGHT, buff=0.05) for i in range(7)], ReplacementTransform(lhs, newLHS), run_time = 2)
+        self.play(*[VGroup(equals_signs[i], rhs[i]).animate.next_to(factorizations[i][-1][-1], RIGHT, buff=0.05) for i in range(7)], ReplacementTransform(lhs, newLHS))
 
         newFinished = [[] for i in range(7)]
 
         arrow.next_to(factorizations[0], LEFT)
-
-        self.wait_to('00:00:41', num_anims = 1)
-
         self.play(Write(arrow))
 
         for i in range(7):
@@ -585,8 +474,6 @@ class Cyclo(Scene):
         #changing everything to white
         self.play(*[i.animate.set_color(WHITE) for i in newLHS], *[i.animate.set_color(WHITE) for i in newRHS])
 
-        self.sync_start('00:00:49')
-        self.wait_to('00:00:54.2', num_anims = 5)
         #highlighting denominators row-by-row
         for i in range(2,7):
             buffer = []
@@ -594,7 +481,7 @@ class Cyclo(Scene):
                 if j%11 == 9:
                     buffer.append(newRHS[i][j])
 
-            self.play(*[Indicate(k, color = colors[i], scale_factor = 3) for k in buffer])
+            self.play(*[Indicate(k, color = colors[i], scale_factor = 3) for k in buffer], time=2)
 
         #give an alternative form of lines 1 and 2
         alt1 = MathTex(r"=(x-e^{2 \pi i \frac{0}{1}})")
@@ -602,13 +489,8 @@ class Cyclo(Scene):
         alt1.next_to(newRHS[0], direction = RIGHT, buff = 0.1)
         alt1.shift([0,newRHS[0].get_edge_center(DOWN)[1]-alt1.get_edge_center(DOWN)[1],0])
 
-        self.wait_to('00:01:10.15', num_anims = 2)
-
-        self.play(Write(alt1), run_time = 2)
-
-        self.wait_to('00:01:13.8', num_anims=2)
-
-        self.play(Indicate(alt1[0][-2], color = RED, scale_factor = 3), run_time = 2)
+        self.play(Write(alt1))
+        self.play(Indicate(alt1[0][-2], color = RED, scale_factor = 3), time = 2)
 
         preAlt2 = MathTex(r"=(x-(-1))")
         preAlt2.scale(0.5)
@@ -619,10 +501,9 @@ class Cyclo(Scene):
         alt2.next_to(newRHS[1], direction=RIGHT, buff=0.1)
         alt2.shift([0, newRHS[1].get_edge_center(DOWN)[1] - alt2.get_edge_center(DOWN)[1], 0])
 
-        self.wait_to('00:01:17.84', num_anims = 4)
         self.play(Write(preAlt2))
         self.play(ReplacementTransform(preAlt2, alt2))
-        self.play(Indicate(alt2[0][-2], color = ORANGE, scale_factor = 3), run_time = 2)
+        self.play(Indicate(alt2[0][-2], color = ORANGE, scale_factor = 3), time = 2)
 
         ex = mt(r"(x-e^{2 \pi i \frac{4}{6}})")
         ex.scale(0.5)
@@ -631,19 +512,19 @@ class Cyclo(Scene):
         exTemplate.scale(0.5)
         exTemplate.next_to(newRHS[2], RIGHT, buff = 0.1)
 
-        self.wait_to('00:01:27.5', num_anims = 6)
-        self.play(Write(ex), run_time = 2)
-        self.play(*rearrangeWhole(ex, exTemplate, [0, 1, 2, 3, 4, 5, 6, -7, 8, -9, 10]), run_time = 2)
-        self.play(FadeOut(ex, shift = [newRHS[2][-1].get_center()-ex[0][-1].get_center()]), run_time = 2)
+        self.play(Write(ex))
+        self.play(*rearrangeWhole(ex, exTemplate, [0, 1, 2, 3, 4, 5, 6, -7, 8, -9, 10]))
+        self.play(FadeOut(ex, shift = [newRHS[2][-1].get_center()-ex[0][-1].get_center()]))
 
         #writing formula for cyclotomic polynomials
-        self.wait_to('00:01:29.5', num_anims = 1)
-        etc = MathTex(r"\vdots")
-        etc.next_to(equals_signs[-1], direction=DOWN, buff=0.5)
-        etc.shift(UP)
-        self.play(*[i.animate.shift(UP) for i in newLHS], *[i.animate.shift(UP) for i in newRHS], *[i.animate.shift(UP) for i in equals_signs], alt1.animate.shift(UP), alt2.animate.shift(UP), Write(etc), run_time = 1)
+        self.play(*[i.animate.shift(UP) for i in newLHS], *[i.animate.shift(UP) for i in newRHS], *[i.animate.shift(UP) for i in equals_signs], alt1.animate.shift(UP), alt2.animate.shift(UP))
 
-        #self.next_section("4", skip_animations = False)
+        etc = MathTex(r"\vdots")
+        etc.next_to(equals_signs[-1], direction = DOWN, buff = 0.5)
+
+        self.play(Write(etc))
+
+        self.next_section("4", skip_animations = False)
 
         newEq = MathTex(r"\Phi_n(x)", r"=", r"\prod_{\substack{0 \le k < n\\\frac{k}{n} \text{ is fully reduced} } } \left(x - e^{2\pi i \frac{k}{n} } \right)")
         setColor(newEq, [[1], [], [5, 8, -2, 3, 6, -4]], [[0], [], [0, 0, 0, 6, 6, 6]])
@@ -652,19 +533,15 @@ class Cyclo(Scene):
         newEq[0].next_to(newEq[1], direction = LEFT, buff = 0.1)
         newEq[2].next_to(newEq[1], direction=RIGHT, buff=0.1)
 
-        self.wait_to('00:01:33.5', num_anims = 3)
-
-        self.play(Write(newEq), run_time = 3)
+        self.play(Write(newEq))
 
         productAlt = MathTex(r"\substack{\gcd(k,n) = 1}")
         setColor(productAlt, [[4, 6]], [[6, 0]])
         productAlt.move_to(newEq[2][6:23])
 
-        self.wait_to('00:01:48.5', num_anims = 2)
-        self.play(Transform(newEq[2][6:23], productAlt), run_time = 2)
+        self.play(Transform(newEq[2][6:23], productAlt))
 
         eqBox = SurroundingRectangle(newEq, buff = 0.1)
-        self.wait_to('00:01:51.2', num_anims = 2)
         self.play(Create(eqBox))
 
         boxedEq = VGroup(eqBox, newEq, productAlt)
@@ -675,18 +552,15 @@ class Cyclo(Scene):
         setColor(rootsStatement, [[], [4, 6], [9, 11]], [[], [6, 0], [6, 0]])
         rootsStatement.arrange(DOWN)
         rootsStatement.next_to(arrow, RIGHT)
-        self.wait_to('00:01:56', num_anims = 3)
-        self.play(Write(arrow), Write(rootsStatement), run_time = 3)
+        self.play(Write(arrow), Write(rootsStatement))
 
-        self.wait(1.7)
-        #self.next_section("2", skip_animations = False)
+        self.next_section("2", skip_animations = False)
         #primes section
 
         self.subsection()
         titlecard = mt(r"x^{q-1}+x^{q-2}+...+x+1")
         setColor(titlecard, [[1, 6]], [[1, 1]])
         self.titlecard("For Primes", titlecard)
-        self.sync_start('00:02:10.3')
 
         cyclo_examples_p = [mt(r"\Phi_1(x)", "=", "x - 1"), mt(r"\Phi_2(x)", "=", "x + 1"), mt(r"\Phi_3(x)", "=", r"x^2 + x + 1"), mt(r"\Phi_4(x)", "=", r"x^2 + 1"),
             mt(r"\Phi_5(x)", "=", r"x^4 + x^3 + x^2 + x + 1"), mt(r"\Phi_6(x)", "=", r"x^2 - x + 1"), mt(r"\Phi_7(x)", "=", r"x^6 + x^5 + x^4 + x^3 + x^2 + x + 1")]
@@ -703,13 +577,12 @@ class Cyclo(Scene):
 
         equations = VGroup(VGroup(l, eq, r) for l, eq, r in zip(lhs, equals_signs, rhs))
         equations.move_to((0, 0, 0))
-        self.wait_to('00:02:14.2', num_anims = 3)
-        self.play(Write(equations), run_time = 3)
+
+        self.play(Write(equations))
 
         primeRows = VGroup(*[cyclo_examples_p[i-1] for i in [2,3,5,7]])
         nonPrimeRows = VGroup(*[cyclo_examples_p[i-1] for i in [1,4,6]])
-        self.wait_to('00:02:17.5', num_anims = 2)
-        self.play(FadeOut(nonPrimeRows), primeRows.animate.arrange(DOWN, aligned_edge = LEFT), run_time = 2)
+        self.play(FadeOut(nonPrimeRows), primeRows.animate.arrange(DOWN, aligned_edge = LEFT))
 
         animGroupList = []
 
@@ -724,11 +597,10 @@ class Cyclo(Scene):
                 elif 3*i-3 < maxIndex:
                     buffer.append(primeRows[j][2][maxIndex])
 
-            animGroupList.append(Indicate(VGroup(*buffer)))
+            animGroupList.append(Indicate(VGroup(*buffer)).set_run_time(0.5))
 
         animGroup = AnimationGroup(*animGroupList, lag_ratio = 0.2)
-        self.wait_to('00:02:24.3', num_anims = 3)
-        self.play(animGroup, run_time = 3)
+        self.play(animGroup)
 
 
             # self.play(*[Indicate(primeRows[j][2][i]) for j in range(4) if [2,3,5,7][j] >= i], time = 0.65)
@@ -745,27 +617,21 @@ class Cyclo(Scene):
         qmark.next_to(newRHS, direction = RIGHT)
         equation = VGroup(newLHS, eq, newRHS)
 
-        self.wait_to('00:02:30', num_anims = 3)
         self.play(ReplacementTransform(primeRows, equation))
-        self.play(Write(qmark), run_time = 2)
+        self.play(Write(qmark))
         equation = VGroup(newLHS, eq, newRHS)
-        self.wait_to('00:02:35.3', num_anims = 3)
         self.play(FadeOut(qmark))
-        self.play(Indicate(equation), run_time = 2)
+        self.play(Indicate(equation, color = WHITE))
 
         geo_form = mt(r"\frac{x^q-1}{x-1}")
         geo_form[0][1].set_color(accents[1])
         geo_form.next_to(equation[1], direction = RIGHT)
-        self.wait_to('00:02:39.7', num_anims = 3)
         self.play(Transform(equation[2], geo_form))
-        self.play(equation.animate.shift([-equation[1].get_x(), -equation[1].get_y(), -equation[1].get_z()]), run_time = 2)
+        self.play(equation.animate.shift([-equation[1].get_x(), -equation[1].get_y(), -equation[1].get_z()]))
 
         phi_p = mt(r"\prod_{\substack{0 \le k < q\\gcd(k,q) = 1}} \left(x - e^{2\pi i \frac{k}{q}} \right)")
         setColor(phi_p, [[3, 10, -4, 5, 12, -2]], [[6, 6, 6, 1, 1, 1]])
         phi_p.next_to(equation[1], direction = LEFT)
-
-        self.wait_to('00:02:43.4', num_anims = 1)
-
         self.play(Transform(equation[0], phi_p))
 
         newSubstack = mt(r"\substack{q\nmid k}")
@@ -776,11 +642,8 @@ class Cyclo(Scene):
         newSubstack.move_to(equation[0][0][6:16])
         newSubstack1.move_to(equation[0][0][6:16])
 
-        self.wait_to('00:02:47.6', num_anims = 1)
         self.play(equation[0][0][6:16].animate.become(newSubstack))
-        self.wait_to('00:02:53.5', num_anims = 1)
         self.play(equation[0][0][6:16].animate.become(newSubstack1))
-        self.wait_to('00:02:58.23', num_anims = 2)
         self.play(FadeOut(equation[0][0][6:16]))
         one = mt(r"\substack{1}")
         one.move_to(equation[0][0][1])
@@ -789,12 +652,10 @@ class Cyclo(Scene):
         newFraction = mt(r"\frac{\prod_{\substack{0 \le k < q}} \left(x - e^{2\pi i \frac{k}{q}} \right)}{x-1}")
         setColor(newFraction, [[3, -8, 5, -6]], [[6, 6, 1, 1]])
         newFraction.next_to(equation[1], direction = RIGHT)
-        self.wait_to('00:03:03.5', num_anims = 1)
         self.play(ReplacementTransform(equation[2][0][4], newFraction[0][17]), ReplacementTransform(equation[2][0][:4], newFraction[0][:17]), ReplacementTransform(equation[2][0][5:], newFraction[0][18:]))
 
         exponentialForm = mt(r"e^0")
         exponentialForm.next_to(newFraction[0][19], direction = RIGHT)
-        self.wait_to('00:03:09', num_anims = 2)
         self.play(Transform(newFraction[0][20], exponentialForm))
 
         exponentialForm = mt(r"e^{2\pi i \frac{0}{q}}")
@@ -803,10 +664,7 @@ class Cyclo(Scene):
         self.play(Transform(newFraction[0][20], exponentialForm))
 
         one.move_to(newFraction[0][1])
-        self.wait_to('00:03:10.6', num_anims = 1)
-        self.play(FadeOut(newFraction[0][17:]))
-        self.wait_to('00:03:13.6', num_anims = 3)
-        self.play(Transform(newFraction[0][1], one))
+        self.play(FadeOut(newFraction[0][17:]), Transform(newFraction[0][1], one))
 
         newRHS = phi_p.copy()
         newRHS.next_to(eq, direction = RIGHT)
@@ -817,8 +675,6 @@ class Cyclo(Scene):
         self.play(Indicate(newFraction[0][:17]), Indicate(equation[0][0][:6]), Indicate(equation[0][0][16:]))
 
         self.hide_all()
-
-        self.wait_to('00:03:14.4', num_anims = 0)
 
         new_fact = MathTex(r"\text{If }b\geq2&\text{, } q \text{ is prime:}", r"\\ &p", "=", r"(b^h)^{q-1} + (b^h)^{q-2} + ...+ b^{h} + 1")
         setColor(new_fact, [[2, 6], [], [], [1, 9, 20, 2, 10, 21, 4, 12]], [[2, 1], [], [], [2, 2, 2, 0, 0, 0, 1, 1]])
@@ -831,7 +687,6 @@ class Cyclo(Scene):
         fact_arr.next_to(new_fact, DOWN)
         fact_arr.set_y(0.5 * (new_fact.get_edge_center(DOWN)[1] + conc_from_fact.get_edge_center(UP)[1]))
 
-        self.wait_to('00:03:18.6', num_anims = 4)
         self.play(Write(new_fact))
         self.play(Write(conc_from_fact), Write(fact_arr))
 
@@ -842,34 +697,30 @@ class Cyclo(Scene):
         self.play(ReplacementTransform(new_fact[3], newRHS))
         self.play(new_fact[1:].animate.shift([fact_arr.get_x()-new_fact[1:].get_x(), 0, 0]))
 
-        self.wait(12)
+        self.wait(4)
 
     def the_result(self):
-        self.next_section("asdfmhj", skip_animations=True)
         self.section()
         self.titlecard("The Central Result")
 
-        self.sync_start()
-
         divis_test_17 = mt(r"17\mid 123743 \rightarrow \text{ not prime}")
-        self.wait_to('00:00:02.200')
+        # CUE 3
         self.play(Write(divis_test_17[0][3:9]))
-        self.wait_to('00:00:08.6', num_anims = 2)
-        self.play(Write(divis_test_17[0][:3]), Write(divis_test_17[0][9:]), run_time = 2)
+        # CUE 3
+        self.play(Write(divis_test_17[0][:3]), Write(divis_test_17[0][9:]))
 
         divis = mt(r"P(x)\mid \Phi_q(x^h)").next_to(divis_test_17[0][9], LEFT)
         setColor(divis, [[-2, -5]], [[0, 1]])
         qmark = mt("?").next_to(divis_test_17[0][-1], RIGHT)
-        self.wait_to('00:00:11.5')
+        # CUE 3
         self.play(ReplacementTransform(divis_test_17[0][:9], divis))
-        self.wait_to('00:00:14.3')
-        self.play(Write(qmark), run_time = 2)
+        self.play(Write(qmark))
 
         Phihq = mt(r"\Phi_{hq}(x)")
         setColor(Phihq, [[-4, -5]], [[1, 0]])
         Phihq.shift(divis[0][2].get_center()-Phihq[0][4].get_center())
-        self.wait_to('00:00:24', num_anims = 2)
-        self.play(ReplacementTransform(divis[0][0], Phihq[0][:3]), run_time = 2)
+        # CUE 3
+        self.play(ReplacementTransform(divis[0][0], Phihq[0][:3]))
 
         titlecard = mt(r"\Phi_{hq}(x)\mid\Phi_q(x^h)")
         setColor(titlecard, [[1, -2, 2, -5]], [[0, 0, 1, 1]])
@@ -877,17 +728,14 @@ class Cyclo(Scene):
         self.subsection()
         self.titlecard("Divisibility", titlecard)
 
-        self.sync_start(stamp = '00:00:25.100')
-
         prod = mt(r"\Phi_n(x)=\prod_{\substack{0\leq k < n \\ \gcd(k,n) = 1}}\left(x-e^{2\pi i \frac{k}{n}}\right)")
         prod2 = mt(r"\Phi_{hq}(x)=\prod_{\substack{0\leq k < hq \\ \gcd(k,hq) = 1}}\left(x-e^{2\pi i \frac{k}{hq}}\right)")
         setColor(prod, [[1, 11, 18, -2, 9, 16, -4]], [[0, 0, 0, 0, 6, 6, 6]])
         setColor(prod2, [[1, 12, 20, -3, 2, 13, 21, -2, 10, 18, -5]], [[0, 0, 0, 0, 1, 1, 1, 1, 6, 6, 6]])
 
-        self.wait_to('00:00:29.500', num_anims = 3)
         self.play(Write(prod))
-        self.play(ReplacementTransform(prod, prod2))
-        self.play(prod2.animate.to_edge(UP))
+        self.play(prod.animate.become(prod2))
+        self.play(prod.animate.to_edge(UP))
 
         lrarrow = mt(r"\Leftrightarrow").move_to(np.array([0,0,0]))
         divis = mt(r"\Phi_{hq}(x)\mid\Phi_q(x^h)").next_to(lrarrow, LEFT)
@@ -900,13 +748,9 @@ class Cyclo(Scene):
         setColor(multi[0], [[-2, -10, -5, -9]], [[0, 0, 1, 1]])
         setColor(multi[2], [[-2, -10, -15, -5, -9, -14]], [[0, 0, 0, 1, 1, 1]])
 
-        self.wait_to('00:00:33.5', num_anims = 1)
-        self.play(Indicate(prod2[0][-12:]))
-        self.wait_to('00:00:40', num_anims=4)
-        self.play(Write(divis), run_time = 2)
-        self.play(FadeIn(lrarrow), run_time = 2)
-        self.wait_to('00:00:43.2', num_anims=2.5)
-        self.play(Write(multi), run_time = 2.5)
+
+        self.play(FadeIn(lrarrow), Write(divis))
+        self.play(Write(multi))
 
         new_multi = VGroup(
                 mt(r"&\forall \ 0\leq k < hq \text{ where}\\ &", r"\gcd(k,hq)=1\text{:}", font_size=30),
@@ -915,22 +759,20 @@ class Cyclo(Scene):
         setColor(new_multi[0], [[3, 5, 6], [4, 6, 7]], [[6, 0, 1], [6, 0, 1]])
         setColor(new_multi[1], [[-2, -10, -5, -9, -12]], [[0, 0, 1, 1, 6]])
 
-        self.wait_to('00:00:55', num_anims=4)
-        self.play(ReplacementTransform(multi, new_multi), run_time = 2)
+        self.play(ReplacementTransform(multi, new_multi))
 
         new_multi1 = VGroup(
                 mt(r"&\forall \ 0\leq k < hq \text{ where}\\ &\gcd(k,hq)=1\text{:}", font_size=30),
                 mt(r"\Phi_q(x^h)\mid_{e^{2\pi i \frac{k}{hq}}} = 0")
         ).arrange(DOWN, buff = 0.5).move_to(multi)
 
-        self.play(*rearrangeWhole(new_multi[1], new_multi1[1], ["f", "f", "f", 7, 8, 9, 10, 11, 12, 13, 14, "f", 6, 0, 1, 2, 3, 4, 5]), FadeIn(new_multi1[1][0][-2:]), run_time = 2)
+        self.play(*rearrangeWhole(new_multi[1], new_multi1[1], ["f", "f", "f", 7, 8, 9, 10, 11, 12, 13, 14, "f", 6, 0, 1, 2, 3, 4, 5]), FadeIn(new_multi1[1][0][-2:]))
 
         new_multi2 = VGroup(
                 mt(r"&\forall \ 0\leq k < hq \text{ where}\\ &\gcd(k,hq)=1\text{:}", font_size=30),
                 mt(r"\Phi_q\left(\left(e^{2\pi i \frac{k}{hq}}\right)^h\right) = 0")
         ).arrange(DOWN, buff = 0.5).move_to(multi)
-
-        self.wait_to('00:01:14', num_anims=2)
+   
         self.play(*rearrangeWhole(new_multi[1], new_multi2[1], ["n", "n", "n", 4, 5, 6, 7, 8, 9, 10, 11, "n", "f", 0, 1, 2, "f", 13, 14]), FadeIn(new_multi2[1][0][3]), FadeIn(new_multi2[1][0][12]), new_multi1[1][0][-2:].animate.move_to(new_multi2[1][0][-2:]))
 
         new_multi3 = VGroup(
@@ -949,25 +791,17 @@ class Cyclo(Scene):
 
         LHS = VGroup(*[new_multi[1][0][i] for i in [3,4,5,6,7,8,10,13,14,15,18]])
         newEq = VGroup(LHS, new_multi1[1][0][-2], new_multi1[1][0][-1])
+      
+        self.play(*rearrangeWhole(new_multi, new_multi4, ["n",-1]), newEq.animate.shift([0, new_multi4[1].get_y()-newEq.get_y(), 0]))
 
-        self.wait_to('00:01:24.3', num_anims = 2)
-
-        self.play(*rearrangeWhole(new_multi, new_multi4, ["n",-1]), newEq.animate.shift([0, new_multi4[1].get_y()-newEq.get_y(), 0]), run_time = 2)
-
-        self.wait_to('00:01:28', num_anims = 2)
-
-        self.play(Indicate(new_multi[0][1][-11:-1]), run_time = 2)
+        self.play(Indicate(new_multi[0][1][-11:-1]))
 
         zeq = mt(r"0 = 0").next_to(new_multi4[0], DOWN)
 
-        self.wait_to('00:01:32.3', num_anims = 4)
+        self.play(Transform(newEq[0], zeq[0][0]), newEq[1].animate.move_to(zeq[0][1]), newEq[2].animate.move_to(zeq[0][2]))
 
-        self.play(Transform(newEq[0], zeq[0][0]), newEq[1].animate.move_to(zeq[0][1]), newEq[2].animate.move_to(zeq[0][2]), run_time = 2)
-
-        self.play(Indicate(newEq), run_time = 2)
-
-        self.wait_to('00:01:36.3', num_anims = 2)
-        self.play(FadeOut(lrarrow), FadeOut(new_multi[0]), FadeOut(newEq), divis.animate.move_to(np.array((0,0,0))), run_time = 2)
+        self.play(Indicate(newEq))
+        self.play(FadeOut(lrarrow), FadeOut(new_multi[0]), FadeOut(newEq), divis.animate.move_to(np.array((0,0,0))))
 
         Q_mult = mt(r"Q(x)\cdot\Phi_{hq}(x)=\Phi_q(x^h)")
         where_q = mt(r"\Phi_q(x^h)=\prod_{\substack{\text{for some} \\ \text{k where} \\ 1 \leq k < hq }} \left(x-e^{2\pi i \frac{k}{hq} }\right) ").next_to(Q_mult, DOWN)
@@ -979,23 +813,19 @@ class Cyclo(Scene):
         setColor(Q_mult, [[6, -2, 7, -5]], [[0, 0, 1, 1]])
         setColor(where_q, [[1, 4, 15, 23, -5, 25, -3, 26, -2]], [[1, 0, 6, 6, 6, 0, 0, 1, 1]])
 
-        self.wait_to('00:01:45.5', num_anims = 2)
-        self.play(*rearrangeWhole(divis, Q_mult, [5, 6, 7, 8, 9, 10, -11, 12, 13, 14, 15, 16, 17]), Write(Q_mult[0][:5]), run_time = 2)
-
-        self.wait_to('00:01:56.3', num_anims = 2)
-        self.play(Write(where_q), run_time = 2)
+        self.play(*rearrangeWhole(divis, Q_mult, [5, 6, 7, 8, 9, 10, -11, 12, 13, 14, 15, 16, 17]), Write(Q_mult[0][:5]))
+        self.play(Write(where_q))
 
         qx = mt(r"Q(x)")
         qx.next_to(where_q[0][6], LEFT)
 
-        self.wait_to('00:02:01', num_anims = 1)
         self.play(ReplacementTransform(where_q[0][:6], qx))
-        self.wait_to('00:02:04', num_anims = 1)
         self.play(Write(arrow), Write(might_be))
         
         highBox = SurroundingRectangle(Q_mult, buff = 0.1)
         self.play(Create(highBox))
 
+        self.subsection()
         self.subsection()
         self.titlecard("Complex Magnitudes", mt(r"\|a+bi\|=\sqrt{a^2+b^2}"))
 
@@ -1006,20 +836,14 @@ class Cyclo(Scene):
         label = Tex(r"monic integer polynomials").next_to(arrows, DOWN)
 
         self.play(Write(monic_polys))
-        self.sync_start('00:02:05.4')
-        self.wait_to('00:02:08', num_anims = 2)
-        self.play(Write(arrows), FadeIn(label), run_time = 2)
-        self.wait_to('00:02:11', num_anims = 2)
-        self.play(Indicate(monic_polys[2]),Indicate(monic_polys[-1]), run_time = 2)
-        self.wait_to('00:02:19', num_anims = 2)
-        self.play(Indicate(monic_polys[0]), run_time = 2)
-        self.wait_to('00:02:21', num_anims = 1)
+        self.wait()
+        self.play(Write(arrows), FadeIn(label))
+        self.play(Indicate(monic_polys[2]),Indicate(monic_polys[-1]))
+        self.play(Indicate(monic_polys[0]))
         self.play(FadeOut(arrows), FadeOut(label))
 
         new_exp = mt(r"Q(b)", r"\cdot", r"\Phi_{hq}(b)", "=", r"\Phi_q(b^h)")
         setColor(new_exp, [[2], [], [1, 2, -2], [], [1, -2, -3]], [[2], [], [0, 1, 2], [], [1, 0, 2]])
-
-        self.wait_to('00:02:23', num_anims = 2)
 
         self.play(ReplacementTransform(monic_polys[0][:2], new_exp[0][:2]),
                   ReplacementTransform(monic_polys[0][2], new_exp[0][2]),
@@ -1028,21 +852,18 @@ class Cyclo(Scene):
                   ReplacementTransform(monic_polys[2][:4], new_exp[2][:4]),
                   ReplacementTransform(monic_polys[2][4], new_exp[2][4]),
                   ReplacementTransform(monic_polys[2][5], new_exp[2][5]),
-                  ReplacementTransform(monic_polys[3:], new_exp[3:]), run_time = 2)
+                  ReplacementTransform(monic_polys[3:], new_exp[3:]))
 
         eq_b = mt("= p")
         eq_b.next_to(monic_polys, RIGHT)
         eq_b.shift([0, monic_polys[3].get_y()-eq_b[0][0].get_y(), 0])
-        self.wait_to('00:02:37', num_anims = 1)
-        self.play(Write(eq_b), run_time = 1)
-        self.wait_to('00:02:39', num_anims = 1)
+        self.play(Write(eq_b))
         self.play(FadeOut(new_exp[-1]), FadeOut(new_exp[-2]), eq_b.animate.shift([monic_polys[3].get_x()-eq_b[0][0].get_x(), 0, 0]))
 
         monic_polys_b1 = mt(r"|Q(b)|", r"\cdot", r"|\Phi_{hq}(b)|")
         setColor(monic_polys_b1, [[3], [], [2, 3, 5]], [[2], [], [0, 1, 2]])
         monic_polys_b1.next_to(eq_b[0][0], direction = LEFT)
 
-        self.wait_to('00:02:41', num_anims = 2)
         self.play(new_exp[0].animate.move_to(monic_polys_b1[0]), new_exp[1].animate.move_to(monic_polys_b1[1]), new_exp[2].animate.move_to(monic_polys_b1[2]))
         self.play(Write(monic_polys_b1[i][j]) for i,j in zip([0,2,2,0], [0,-1,0,-1]))
 
@@ -1059,13 +880,12 @@ class Cyclo(Scene):
 
         eq2.shift([eq1[1].get_x()-eq2[1].get_x(), 0, 0])
 
-        self.wait_to('00:02:44', num_anims = 2)
-        self.play(AnimationGroup(Write(eq1), Write(orz), Write(eq2), lag_ratio = 0.2), run_time = 2)
+        self.play(AnimationGroup(Write(eq1), Write(orz), Write(eq2), lag_ratio = 0.2))
 
         new_eq = VGroup(monic_polys_b1[0][0], monic_polys_b1[0][-1], monic_polys_b1[2][0], monic_polys_b1[2][-1], new_exp[0:3], eq_b)
+        self.play(FadeOut(orz), new_eq.animate.to_edge(UP))
 
-        self.wait_to('00:02:45.35', num_anims = 1)
-        self.play(FadeOut(orz), new_eq.animate.to_edge(UP),eq1.animate.shift(3*UP), eq2.animate.shift(UP))
+        self.play(eq1.animate.shift(3*UP), eq2.animate.shift(UP))
 
         mag_phi_hq = mt(r"|\Phi_{hq}(b)|", "=", r"\Big\|", r"\prod_{\substack{1 \leq k < hq \\ \gcd(k, hq)=1} }", r"(b-e^{2\pi i \frac{k}{hq} })", r"\Big\|")
         mag_phi_hq2 = mt(r"|\Phi_{hq}(b)|", "=", r"\prod_{\substack{1 \leq k < hq \\ \gcd(k, hq)=1} }", r"\Big\|", r"b-e^{2\pi i \frac{k}{hq} }", r"\Big\|")
@@ -1083,7 +903,6 @@ class Cyclo(Scene):
         mag_q.shift(np.array(eq2[1].get_center().tolist()) - np.array(mag_q[1].get_center().tolist()))
         mag_q2.shift(np.array(eq2[1].get_center().tolist()) - np.array(mag_q2[1].get_center().tolist()))
 
-        self.wait_to('00:02:49', num_anims = 2)
         self.play(ReplacementTransform(eq1[:2], mag_phi_hq[:2]),
                   ReplacementTransform(eq2[:2], mag_q[:2]),
                   ReplacementTransform(eq1[2], mag_phi_hq[2:]),
@@ -1107,15 +926,14 @@ class Cyclo(Scene):
         mag1 = VGroup(mag_phi_hq[2], mag_phi_hq[4][1:-1], mag_phi_hq[5])
         mag2 = VGroup(mag_q[2], mag_q[4][1:-1], mag_q[5])
 
-        self.wait_to('00:02:56.3', num_anims = 1)
         self.play(Indicate(mag1), Indicate(mag2))
 
-        self.next_section("farts", skip_animations = False)
+        self.wait()
+        #self.next_section(name = "fart", skip_animations=True)
         self.subsubsection()
         titlecard = mt(r"\left\|b-e^{2\pi i\frac{k}{hq}}\right\|")
         setColor(titlecard, [[3, -7, -5, -4]], [[2, 6, 0, 1]])
         self.titlecard("", titlecard)
-        self.sync_start('00:03:02.8')
 
         plane = ComplexPlane(
             background_line_style={"stroke_opacity": 0},
@@ -1196,7 +1014,6 @@ class Cyclo(Scene):
         moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
         moving_point.add_updater(lambda m: m.move_arc_center_to(plane.n2p(eval_p(k.get_value()))))
 
-        self.wait_to('00:03:14.2', num_anims = 7)
         self.play(Create(plane), Create(circle))
         self.play(Create(moving_point))
         self.play(Write(value_label))
@@ -1205,56 +1022,49 @@ class Cyclo(Scene):
         self.play(Create(origin_b_line))
         self.play(Write(length_label))
 
-        self.wait_to('00:03:16.2', num_anims = 1)
+
         self.play(Indicate(origin_b_line))
 
-        self.wait_to('00:03:19.5', num_anims = 1)
         self.play(FadeToColor(outer_line, color=PINK), Indicate(outer_line), FadeToColor(inner_radius, color=PINK), Indicate(inner_radius))
+
+
 
 
         bottom_magni = mt(r"1", r"+", r"\left\|b-e^{i\theta}\right\|\geq b").to_edge(DOWN)
         setColor(bottom_magni, [[], [], [2, -1]], [[], [], [2, 2]])
-
-        self.wait_to('00:03:21', num_anims = 1)
         self.play(Write(bottom_magni))
-
 
         self.play(ChangeSpeed(k.animate.set_value(2*PI), speedinfo={0: 0.125}))
 
         theta_thing = mt(r"\theta = 2\pi\frac{k}{hq} \neq 0").next_to(bottom_magni, UP)
         setColor(theta_thing, [[-7, -5, -4]], [[6, 0, 1]])
 
-        self.sync_start('00:03:33.4')
         self.play(Write(theta_thing))
 
         bottom_magni2 = mt(r"1+\left\|b-e^{i\theta}\right\| > b").to_edge(DOWN)
-        self.wait_to('00:03:43', num_anims = 2)
         self.play(Unwrite(theta_thing), Transform(bottom_magni[2][-2], bottom_magni2[0][-2]))
 
         self.play(ChangeSpeed(k.animate.set_value(2*PI+PI/4), speedinfo={0: 1}))
 
         bottom_magni3 = mt(r"\left\|b-e^{i\theta}\right\| > b - 1")
         bottom_magni3.shift(np.array(bottom_magni[2][-2].get_center().tolist())-np.array(bottom_magni3[0][-4].get_center().tolist()))
-        self.wait_to('00:03:52.5', num_anims = 2)
-        self.play(rearrange(bottom_magni[1], bottom_magni3[0][-2]), rearrange(bottom_magni[0], bottom_magni3[0][-1]), Transform(bottom_magni[1], bottom_magni3[0][-2]), run_time = 2)
+
+        self.play(rearrange(bottom_magni[1], bottom_magni3[0][-2]), rearrange(bottom_magni[0], bottom_magni3[0][-1]), Transform(bottom_magni[1], bottom_magni3[0][-2]))
 
         rightmost = mt(r"\geq", "2 - 1")
         rightmost.next_to(bottom_magni[0], RIGHT)
 
-        self.wait_to('00:03:54', num_anims = 1)
         self.play(Write(rightmost))
 
         one = mt(r"1")
         one.next_to(rightmost[0], RIGHT)
-        self.wait_to('00:04:01.5', num_anims = 5)
         self.play(ReplacementTransform(rightmost[1], one))
 
         letGo = VGroup(bottom_magni[0], bottom_magni[1], bottom_magni[2][-1], rightmost[0])
-        self.play(FadeOut(letGo), one.animate.next_to(bottom_magni[2][-2], RIGHT), run_time = 2)
+        self.play(FadeOut(letGo), one.animate.next_to(bottom_magni[2][-2], RIGHT))
 
         surr_magni = SurroundingRectangle(bottom_magni[2][:-1], one, buff=0.1)
-        self.play(Create(surr_magni), run_time = 2)
-        self.wait(5)
+        self.play(Create(surr_magni))
         self.play(FadeOut(surr_magni))
 
         inner_radius.remove_updater(inner_radius.updaters[0])
@@ -1268,8 +1078,6 @@ class Cyclo(Scene):
     def step_27(self):
         # Step 27
         self.hide_all()
-
-
 
         top27 = mt(r"|Q(b)|", r"\cdot", r"|\Phi_{hq}(b)| = p").shift(UP)
         top27.to_edge(UP)
@@ -1285,15 +1093,14 @@ class Cyclo(Scene):
         bot27.shift(DOWN)
 
         self.play(Write(top27), Write(mid27), Write(bot27))
+        self.wait()
         # Step 28
-        self.sync_start("00:03:55.220")
 
         d27 = mt(r"1 <")
         d27.next_to(mid27[0][0], LEFT)
-        self.wait_to("00:04:00.444")
         self.play(Write(d27))
 
-        self.wait_to("00:04:05.138", num_anims=3)
+        self.wait()
 
         # Step 29
         self.play(FadeOut(mid27), FadeOut(d27))
@@ -1303,7 +1110,7 @@ class Cyclo(Scene):
         d27.next_to(bot27[0][0], LEFT)
         self.play(Write(d27))
 
-        self.wait_to("00:04:17.268")
+        self.wait()
 
         # Step 30
         nwarrow = mt(r"\nwarrow")
@@ -1317,16 +1124,13 @@ class Cyclo(Scene):
         # 31
         prod2 = mt(r"Q(x) = 1")
         prod2.next_to(nwarrow, DOWN + RIGHT)
-        self.wait_to("00:04:22.598")
         self.play(ReplacementTransform(prod, prod2))
         self.wait()
-
-        self.wait_to("00:04:28.268", num_anims=6)
 
         # 32
         box = SurroundingRectangle(prod2)
         self.play(Write(box))
-        #self.wait()
+        self.wait()
 
         # 33
         self.hide_all()
@@ -1339,7 +1143,7 @@ class Cyclo(Scene):
         top33_p2.move_to(top33)
         self.play(ReplacementTransform(top33, top33_p2))
 
-        #self.wait()
+        self.wait()
 
         # 34
         print(top33_p2[0])
@@ -1362,8 +1166,6 @@ class Cyclo(Scene):
 
         self.titlecard("Wrapping Up", titlecard)
 
-
-        self.wait_to("00:04:42.986", num_anims=2)
         poop_dimension = mt(r"\Phi_{hq}(x)", "=", r"\Phi_q(x^h)}}")
         setColor(poop_dimension,[[1,2],[],[1,4]],[[0,1],[],[1,0]])
         poop_arrows = mt(r"\nwarrow\ &\ \ \ \nearrow").next_to(poop_dimension, DOWN)
@@ -1372,8 +1174,6 @@ class Cyclo(Scene):
 
         self.play(Write(poop_dimension))
         self.play(Write(poop_arrows), Write(label))
-
-        self.wait_to("00:04:47.781", num_anims=2)
 
         line1 = mt(r"/")
         line2 = mt(r"\backslash")
@@ -1401,15 +1201,9 @@ class Cyclo(Scene):
 
         self.play(FadeOut(label), FadeOut(poop_arrows))
         self.play(Write(line1), Write(set1))
-
-        self.wait_to("00:04:52.511", num_anims=3)
-
         self.play(Write(line2))
         self.play(Write(derivation))
         self.play(*rearrangeWhole(derivation, derivation1, [0, 8, 1, 2, 3, 4, 5, 6, -7, 9]))
-
-        self.wait_to("00:05:00.118", num_anims=4)
-
         expThing = VGroup(derivation[0][3:], derivation[0][1])
         self.play(rearrange(expThing, set2[1]), rearrange(derivation[1], set2[2][1:-1]),
                   Write(set2[0]), Write(set2[2][:1]), Write(set2[2][-1]),
@@ -1442,8 +1236,6 @@ class Cyclo(Scene):
 
         equation = VGroup(set1[0], set1[1][-4], set1[2], poop_dimension[1], set2[0], derivation[0][-3], newButt)
 
-        self.wait_to("00:05:04.319", num_anims=1)
-
         supposition = mt(r"\text{If there is prime } r\neq q \text{ where } r\mid h:").to_edge(UP)
         setColor(supposition, [[-10,-2]],[[1,0]])
 
@@ -1451,27 +1243,24 @@ class Cyclo(Scene):
 
         gcd1 = mt(r"\gcd(r, hq)=r").next_to(supposition, DOWN)
         setColor(gcd1, [[-5,-4]],[[0,1]])
-        gcd1.shift((gcd1.get_edge_center(RIGHT)[0]+0.7)*LEFT)
-        gcd2 = mt(r"\gcd(r, q)=1").next_to(supposition, DOWN)
+        gcd1.shift(gcd1.get_edge_center(RIGHT)[0]*LEFT)
+        gcd2 = mt(r", \ \gcd(r, q)=1").next_to(supposition, DOWN)
         setColor(gcd2, [[-4]],[[1]])
-        gcd2.shift((gcd2.get_edge_center(LEFT)[0]-0.7)*LEFT)
+        gcd2.shift(gcd2.get_edge_center(LEFT)[0]*LEFT)
 
-        self.wait_to('00:05:12.9', num_anims = 2)
-        self.play(Write(gcd2), run_time = 2)
-        self.wait_to('00:05:16', num_anims = 2)
-        self.play(Write(gcd1), run_time = 2)
+        self.play(Write(gcd1))
+        self.play(Write(gcd2))
 
         neq = mt(r"\neq").move_to(poop_dimension[1])
 
-        self.wait_to('00:05:17.8')
         self.play(Write(neq))
-        self.wait_to('00:05:23.1', num_anims = 3.5)
-        self.play(AnimationGroup(Unwrite(neq), Unwrite(gcd2), Unwrite(gcd1), lag_ratio=0.2), run_time = 1.5)
+        self.play(AnimationGroup(Unwrite(neq), Unwrite(gcd2), Unwrite(gcd1), lag_ratio=0.2))
 
         strike = Line((supposition.get_edge_center(LEFT)[0]-0.3,supposition.get_edge_center(LEFT)[1],0), (supposition.get_edge_center(RIGHT)[0]+0.3,supposition.get_edge_center(RIGHT)[1],0))
 
         self.play(Create(strike))
-        self.play(FadeOut(strike), FadeOut(supposition), equation.animate.shift(UP))
+        self.play(FadeOut(strike), FadeOut(supposition),
+                  equation.animate.shift(UP))
 
         arr = mt(r"\downarrow").next_to(poop_dimension[1], DOWN)
         text_meow = Tex(r"The only prime divisor of $h$ is $q$").next_to(arr, DOWN)
@@ -1479,16 +1268,13 @@ class Cyclo(Scene):
         text_meow2 = mt(r"h=q^t").next_to(arr, DOWN)
         setColor(text_meow2, [[0,2]], [[0,1]])
 
-        self.wait_to('00:05:26.8', num_anims = 2)
         self.play(Write(arr))
         self.play(Write(text_meow))
 
-        self.wait_to('00:05:29.9', num_anims = 1)
         self.play(Transform(text_meow, text_meow2))
 
         box = SurroundingRectangle(text_meow, buff=0.1)
 
-        self.wait_to('00:05:31.2', num_anims=1)
         self.play(Create(box))
 
         self.hide_all()
@@ -1514,30 +1300,14 @@ class Cyclo(Scene):
     def epilogue(self):
         self.section()
         self.titlecard("Epilogue")
-        self.sync_start()
 
-        que = mt(r"q")
-        aye = mt("a")
-        que.set_color(accents[1])
-        aye.set_color(accents[1])
-        aye1 = aye.copy()
-
-        self.wait_to("00:00:12.5", num_anims = 4)
-        self.play(Write(que), run_time = 2)
-        self.play(ReplacementTransform(que, aye), run_time = 2)
-
-        poop_dimension = mt(r"\Phi_{ha}(x)", "=", r"\Phi_a(x^h)")
+        poop_dimension = mt(r"\Phi_{ha}(x)", "=", r"\Phi_a(x^h)}}")
         setColor(poop_dimension,[[1,2],[],[1,4]],[[0,1],[],[1,0]])
         poop_arrows = mt(r"\nwarrow\ &\ \ \ \nearrow").next_to(poop_dimension, DOWN)
         poop_arrows.shift(np.array((poop_dimension[1].get_x() - poop_arrows.get_x(), 0, 0)))
         label = Tex(r"must have the same roots").next_to(poop_arrows, DOWN)
 
-        self.wait_to('00:00:20.8', num_anims = 5)
-
-        self.play(rearrange(aye, poop_dimension[0][2]), rearrange(aye1, poop_dimension[2][-5]), run_time = 2)
-        self.play(Write(poop_dimension), run_time = 3)
-
-        self.wait_to('00:00:26.670', num_anims = 0)
+        self.play(Write(poop_dimension))
         self.play(Write(poop_arrows), Write(label))
 
         line1 = mt(r"/")
@@ -1576,7 +1346,6 @@ class Cyclo(Scene):
         newSet = VGroup(set2[0], expThing, newButt)
 
         self.play(FadeOut(poop_dimension[0]), FadeOut(poop_dimension[2]), FadeOut(line1), FadeOut(line2),
-                  FadeOut(aye), FadeOut(aye1),
                   set1.animate.next_to(poop_dimension[1], LEFT), newSet.animate.next_to(poop_dimension[1], RIGHT))
 
         self.play(Indicate(set1[1][-4]), Indicate(derivation[0][-3]))
@@ -1634,8 +1403,6 @@ class Cyclo(Scene):
 
         self.hide_all()
 
-        self.sync_start('00:00:27.500')
-
         new_fact = MathTex(r"\text{If }b\geq2&\text{:}", r"\\ &p", "=",
                            r"\Phi_a(b^h)")
         setColor(new_fact, [[2], [], [], [1, 3, 4]], [[2],[], [], [1, 2, 0]])
@@ -1653,12 +1420,9 @@ class Cyclo(Scene):
 
         eqBox = SurroundingRectangle(new_fact, conc_from_fact, fact_arr, buff=0.1)
 
-        self.wait_to('00:00:30.5', num_anims = 1.5)
-        self.play(Write(new_fact), run_time = 1.5)
-        self.wait_to('00:00:33.2', num_anims=2)
-        self.play(Write(conc_from_fact), Write(fact_arr), run_time = 2)
-        self.wait_to('00:00:35.8', num_anims=2)
-        self.play(Create(eqBox), run_time = 2)
+        self.play(Write(new_fact))
+        self.play(Write(conc_from_fact), Write(fact_arr))
+        self.play(Create(eqBox))
 
         self.hide_all()
 
@@ -1679,11 +1443,7 @@ class Cyclo(Scene):
 
         vdots.next_to(statements[2][1], DOWN, buff = 0.5)
 
-        self.wait_to('00:00:38.8', num_anims = 2)
-
-        self.play(AnimationGroup(*[Write(statements[i]) for i in range(3)], Write(vdots), lag_ratio = 0.2), run_time = 2)
-
-        self.wait(5)
+        self.play(AnimationGroup(*[Write(statements[i]) for i in range(3)], Write(vdots), lag_ratio = 0.2))
 
     def construct(self):
         # play intro animation
@@ -1692,6 +1452,6 @@ class Cyclo(Scene):
         #self.definitions()
         #play section 6
         self.the_result()
-        #self.step_27()
-        #self.last_section()
+        self.step_27()
+        self.last_section()
         #self.epilogue()
